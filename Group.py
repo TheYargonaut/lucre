@@ -126,8 +126,11 @@ class Partition( object ):
 defaultFile = os.path.join( '.', 'userdata', 'groups.yaml' )
 
 def load( filename=defaultFile ):
-    with open( filename, 'r' ) as f:
-        return [ Group( **g ) for g in yaml.load( f, Loader=yaml.FullLoader ) ]
+    try:
+        with open( filename, 'r' ) as f:
+            return [ Group( **g ) for g in yaml.load( f, Loader=yaml.FullLoader ) ]
+    except FileNotFoundError:
+        return []
 
 def save( groups, filename=defaultFile ):
     with open( filename, 'w' ) as f:

@@ -1,17 +1,19 @@
 import os, yaml
 import pandas as pd
 
-knownFmt = { 'internal' : [ 'date', 'delta', 'comment' ] }
+knownFmt = { 'internal' : [ 'date', 'delta', 'memo' ] }
 
 defaultFmtFn = os.path.join( '.', 'userdata', 'formats.yaml' )
 def loadFormats( filename=defaultFmtFn ):
-    with open( filename, 'r' ) as f:
-        return yaml.load( f, Loader=yaml.FullLoader )
+    try:
+        with open( filename, 'r' ) as f:
+            return yaml.load( f, Loader=yaml.FullLoader )
+    except FileNotFoundError:
+        return knownFmt
 def saveFormats( formats, filename=defaultFmtFn ):
     with open( filename, 'w' ) as f:
         yaml.dump( formats, f )
 
-defaultLedgerFn = os.path.join( '.', 'userdata', 'ledger.csv' )
 def preprocess( df ):
     ledger = df[ knownFmt[ 'internal' ] ]
     ledger[ 'date' ] = pd.to_datetime( ledger[ 'date' ] )
@@ -19,9 +21,14 @@ def preprocess( df ):
     ledger.reset_index( drop=True, inplace=True )
     pd.DataFrame.drop_duplicates( ledger )
     return ledger
+
+defaultLedgerFn = os.path.join( '.', 'userdata', 'ledger.csv' )
 def loadLedger( filename=defaultLedgerFn, fmt=knownFmt[ 'internal' ] ):
-    df = pd.read_csv( filename, index_col=None, header=None, names=fmt )
-    return preprocess( df )
+    try:
+        df = pd.read_csv( filename, index_col=None, header=None, names=fmt )
+        return preprocess( df )
+    except FileNotFoundError:
+        return pd.DataFrame( columns=knownFmt[ 'internal' ] )
 def saveLedger( dataFrame, filename=defaultLedgerFn ):
     dataFrame.to_csv( filename, header=False, index=False )
 
