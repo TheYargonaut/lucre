@@ -1,8 +1,8 @@
 import os, yaml
 import pandas as pd
+import tkinter as tk
 
 knownFmt = { 'internal' : [ 'date', 'delta', 'memo' ] }
-
 defaultFmtFn = os.path.join( '.', 'userdata', 'formats.yaml' )
 def loadFormats( filename=defaultFmtFn ):
     try:
@@ -29,6 +29,8 @@ def loadLedger( filename=defaultLedgerFn, fmt=knownFmt[ 'internal' ] ):
         return preprocess( df )
     except FileNotFoundError:
         return pd.DataFrame( columns=knownFmt[ 'internal' ] )
+def importLedger( existingLedger, filename=defaultLedgerFn, fmt=knownFmt[ 'internal' ] ):
+    return preprocess( existingLedger.append( loadLedger( filename, fmt ) ) )
 def saveLedger( dataFrame, filename=defaultLedgerFn ):
     dataFrame.to_csv( filename, header=False, index=False )
 
@@ -49,3 +51,11 @@ def massLoadLedger( startDir, fmt=knownFmt[ 'internal' ], recurse=False, ext=Non
     fg = fileGen( startDir, recurse, ext )
     lg = ledgerGen( fg, fmt )
     return preprocess( pd.concat( lg, ignore_index=True ) )
+
+class Ledger( object ):
+    def __init__( self, df=None, updateCb=lambda:None ):
+        self.df = df
+        self.updateCb = updateCb
+    
+    def add( self, df ):
+        self.df = preprocess( self.df.append( preprocess( df ) ) )
