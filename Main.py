@@ -2,6 +2,7 @@ from Group import load as loadGroups, save as saveGroups, Partition
 from Ledger import loadLedger, loadFormats, saveFormats, saveLedger, importLedger, Ledger
 from Table import tableFromDf
 import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import pandas as pd
 import os
 import tkinter as tk
@@ -11,6 +12,8 @@ from ImportLedger import importLedgerCb
 
 import pdb
 
+pd.plotting.register_matplotlib_converters()
+
 # import all the data
 ledger = loadLedger()
 groups = loadGroups()
@@ -18,9 +21,23 @@ formats = loadFormats()
 
 ledgerManager = Ledger( ledger )
 
+# make the window
 top = tk.Tk()
-importLedgerButton = tk.Button( top, text="Import Ledger", command=importLedgerCb( top, ledgerManager ) )
-importLedgerButton.pack()
+
+fig = plt.Figure()
+ax = fig.add_subplot( 111 )
+chartWidget = FigureCanvasTkAgg( fig, top )
+chartWidget.get_tk_widget().pack( side=tk.LEFT, fill=tk.BOTH, expand=True )
+
+controlFrame = tk.Frame( top )
+controlFrame.pack( side=tk.RIGHT, fill=tk.Y )
+
+importLedgerButton = tk.Button( controlFrame, text="Import Ledger", command=importLedgerCb( top, ledgerManager ) )
+importLedgerButton.pack( side=tk.TOP, fill=tk.X )
+
+addGroupButton = tk.Button( controlFrame, text="New Group" )
+addGroupButton.pack( side=tk.BOTTOM, fill=tk.X )
+
 top.mainloop()
 
 
@@ -29,7 +46,7 @@ expensePart = Partition( [ g for g in groups if g.negate ], sum( [
 ], [] ), negate=True )
 
 # make an overall graph
-pd.plotting.register_matplotlib_converters()
+
 plt.figure()
 ax = plt.gca()
 expensePart.plotPie( ledgerManager.df, ax )
