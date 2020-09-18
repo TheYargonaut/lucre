@@ -7,55 +7,62 @@ from Ledger import knownFmt
 
 defaultColumn = 'ignore'
 
-def importLedgerCb( master, ledger ):
+class ImportLedgerWindow( tk.Toplevel ):
+    def __init__( self, master, ledger, df, *args, **kwargs ):
+        tk.Toplevel.__init__( self, master, *args, **kwargs )
+        self.ledger = ledger
+        self.df = df
+        self.headerFmt = []
+        self.build()
     
+    def finalize( self ):
+        fmt = [ str( i ) if name == defaultColumn else name
+                for i, name in enumerate( self.headerFmt ) ]
+        self.df.columns = fmt
+        self.ledger.add( self.df )
+        self.destroy()
+    
+    def updateFmt( self, value, pos ):
+        self.headerFmt[ pos ] = value
+        if all( self.headerFmt.count( name ) == 1 for name in knownFmt[ 'internal' ] ):
+            self.confirm.configure( state=tk.NORMAL )
+        else:
+            self.confirm.configure( state=tk.DISABLED )
+
+    def setTableHeader( self, table ):
+        'replace top row with dropdowns for setting column names'
+        headerRow = []
+        for i, cell in enumerate( table.cells[ 0 ] ):
+            self.headerFmt.append( defaultColumn )
+            cell.destroy()
+            var = tk.StringVar( table )
+            var.set( defaultColumn )
+            colCb = lambda value, pos=i : self.updateFmt( value, pos )
+            menu = tk.OptionMenu( table, var, defaultColumn, *knownFmt[ 'internal' ], command=colCb )
+            menu.grid( row=0, column=i )
+            headerRow.append( menu )
+        table.cells[ 0 ] = headerRow
+
+    def build( self ):
+        button = tk.Frame( self )
+        button.pack( side=tk.BOTTOM, fill=tk.X )
+        cancel = tk.Button( button, text="Cancel", command=self.destroy )
+        cancel.pack( side=tk.RIGHT )
+        self.confirm = tk.Button( button, text="Confirm", command=self.finalize, state=tk.DISABLED )
+        self.confirm.pack( side=tk.RIGHT )
+
+        scroll = Scrollable( self, horizontal=True, vertical=True )
+        scroll.pack( side=tk.TOP, fill=tk.BOTH, expand=True )
+        table = tableFromDf( scroll, self.df, header=True )
+        self.setTableHeader( table )
+        table.pack( side=tk.TOP, fill=tk.BOTH, expand=True )
+
+def importLedgerCb( master, ledger ):
     def cb( master=master, ledger=ledger ):
-        # choose file
         f = tk.filedialog.askopenfilename()
         if not f:
             return
         df = pd.read_csv( f, index_col=None, header=None )
-
-        # preview and TODO choose columns, gatekeep confirmation
-        top = tk.Toplevel( master )
-
-        buttons = tk.Frame( top )
-        cancelButton = tk.Button( buttons, text="Cancel", command=top.destroy )
-        headerFmt = []
-        def confirmCb( df=df, ledger=ledger ):
-            fmt = [ str( i ) if name == defaultColumn else name for i, name in enumerate( headerFmt ) ]
-            df.columns = fmt
-            ledger.add( df )
-            top.destroy()
-        confirmButton = tk.Button( buttons, text="Confirm", command=confirmCb, state=tk.DISABLED )
-
-        scroll = Scrollable( top, horizontal=True, vertical=True)
-        scroll.pack( side=tk.TOP, fill=tk.BOTH, expand=True )
-        table = tableFromDf( scroll, df, header=True )
-        
-        # replace top row with dropdowns for setting columns
-        headerRow = []
-        headerVar = []
-        for i, cell in enumerate( table.cells[ 0 ] ):
-            headerFmt.append( defaultColumn )
-            cell.destroy()
-            var = tk.StringVar( table )
-            var.set( defaultColumn )
-            def colCb( value, pos=i ):
-                headerFmt[ pos ] = value
-                if all( headerFmt.count( name ) == 1 for name in knownFmt[ 'internal' ] ):
-                    confirmButton.configure( state=tk.NORMAL )
-                else:
-                    confirmButton.configure( state=tk.DISABLED )
-            menu = tk.OptionMenu( table, var, defaultColumn, *knownFmt[ 'internal' ], command=colCb )
-            menu.grid( row=0, column=i )
-            headerRow.append( menu )
-            headerVar.append( var )
-        table.cells[ 0 ] = headerRow
-
-        table.pack( side=tk.TOP, fill=tk.BOTH, expand=True )
-        buttons.pack( side=tk.BOTTOM, fill=tk.X )
-        cancelButton.pack( side=tk.RIGHT )
-        confirmButton.pack( side=tk.RIGHT )
-        master.wait_window( top )
+        window = ImportLedgerWindow( master, ledger, df )
+        master.wait_window( window )
     return cb

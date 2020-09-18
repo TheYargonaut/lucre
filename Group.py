@@ -11,7 +11,7 @@ def matchAny( regexList, df, column='comment' ):
                      for r in regexList ) )
 
 class Group( object ):
-    def __init__( self, title, whitelist=[], blacklist=[], negate=False ):
+    def __init__( self, title="", whitelist=[], blacklist=[], negate=False ):
         '''blacklist overrides whitelist'''
         self.title = title
         self.whitelist = whitelist

@@ -1,4 +1,4 @@
-from Group import load as loadGroups, save as saveGroups, Partition
+from Group import load as loadGroups, save as saveGroups, Partition, Group
 from Ledger import loadLedger, loadFormats, saveFormats, saveLedger, importLedger, Ledger
 from Table import tableFromDf
 import matplotlib.pyplot as plt
@@ -9,6 +9,7 @@ import tkinter as tk
 from tkinter.filedialog import askopenfilename
 from Scrollable import Scrollable
 from ImportLedger import importLedgerCb
+from EditGroup import editGroupCb
 
 import pdb
 
@@ -35,7 +36,7 @@ controlFrame.pack( side=tk.RIGHT, fill=tk.Y )
 importLedgerButton = tk.Button( controlFrame, text="Import Ledger", command=importLedgerCb( top, ledgerManager ) )
 importLedgerButton.pack( side=tk.TOP, fill=tk.X )
 
-addGroupButton = tk.Button( controlFrame, text="New Group" )
+addGroupButton = tk.Button( controlFrame, text="New Group", command=editGroupCb( top, Group(), ledgerManager ) )
 addGroupButton.pack( side=tk.BOTTOM, fill=tk.X )
 
 top.mainloop()

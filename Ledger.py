@@ -15,7 +15,7 @@ def saveFormats( formats, filename=defaultFmtFn ):
         yaml.dump( formats, f )
 
 def preprocess( df ):
-    ledger = df[ knownFmt[ 'internal' ] ]
+    ledger = df[ knownFmt[ 'internal' ] ].copy()
     ledger[ 'date' ] = pd.to_datetime( ledger[ 'date' ] )
     ledger.sort_values( 'date', inplace=True )
     ledger.reset_index( drop=True, inplace=True )
