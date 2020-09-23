@@ -59,3 +59,4 @@ class Ledger( object ):
     
     def add( self, df ):
         self.df = preprocess( self.df.append( preprocess( df ) ) )
+        self.updateCb( self.df )

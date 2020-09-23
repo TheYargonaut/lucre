@@ -16,19 +16,31 @@ import pdb
 pd.plotting.register_matplotlib_converters()
 
 # import all the data
+formats = loadFormats()
 ledger = loadLedger()
 groups = loadGroups()
-formats = loadFormats()
 
-ledgerManager = Ledger( ledger )
+# set up managers
+expensePart = Partition( [ g for g in groups if g.negate ], sum( [
+   g.whitelist + g.blacklist for g in groups if not g.negate
+], [] ), negate=True )
+generalPart = Partition()
+fig = plt.Figure()
+ax = fig.add_subplot( 111 )
 
 # make the window
 top = tk.Tk()
 
-fig = plt.Figure()
-ax = fig.add_subplot( 111 )
 chartWidget = FigureCanvasTkAgg( fig, top )
 chartWidget.get_tk_widget().pack( side=tk.LEFT, fill=tk.BOTH, expand=True )
+def redraw( df, part=generalPart ):
+    ax.cla()
+    part.plotDelta( df, ax )
+    chartWidget.draw()
+ledgerManager = Ledger( ledger, updateCb=redraw )
+ledgerManager.updateCb( ledgerManager.df )
+# for g in loadGroups():
+#     g.plotCumulative( ledger, ax )
 
 controlFrame = tk.Frame( top )
 controlFrame.pack( side=tk.RIGHT, fill=tk.Y )
@@ -40,20 +52,6 @@ addGroupButton = tk.Button( controlFrame, text="New Group", command=editGroupCb(
 addGroupButton.pack( side=tk.BOTTOM, fill=tk.X )
 
 top.mainloop()
-
-
-expensePart = Partition( [ g for g in groups if g.negate ], sum( [
-   g.whitelist + g.blacklist for g in groups if not g.negate
-], [] ), negate=True )
-
-# make an overall graph
-
-plt.figure()
-ax = plt.gca()
-expensePart.plotPie( ledgerManager.df, ax )
-# for g in loadGroups():
-#     g.plotCumulative( ledger, ax )
-plt.show()
 
 # save current settings
 if not os.path.exists( os.path.join( '.', 'userdata' ) ):

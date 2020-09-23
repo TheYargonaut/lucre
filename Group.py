@@ -64,6 +64,7 @@ class Partition( object ):
     
     def filter( self, df, edges=True ):
         'split into g+1 groups and return as dictionary'
+        df = df.copy()
         if self.blacklist:
             df = df[ ~matchAny( self.blacklist, df ) ]
         early = pd.DataFrame( dict( date=df[ 'date' ].min(),
@@ -93,12 +94,14 @@ class Partition( object ):
     def plotDelta( self, df, ax ):
         for title, data in self.filter( df, False ).items():
             data[ title ] = data[ 'delta' ]
-            data.plot( x='date', y=title, ax=ax )
+            if not data.empty:
+                data.plot( x='date', y=title, ax=ax )
 
     def plotCumulative( self, df, ax ):
         for title, data in self.filter( df ).items():
             data[ title ] = data[ 'delta' ].cumsum()
-            data.plot( x='date', y=title, ax=ax, drawstyle='steps-post' )
+            if not data.empty:
+                data.plot( x='date', y=title, ax=ax, drawstyle='steps-post' )
 
     def plotLayer( self, stack, layer, title, ax ):
         if stack is None:
@@ -118,8 +121,7 @@ class Partition( object ):
     
     def plotPie( self, df, ax ):
         total = { title: data[ 'delta' ].sum() for title, data in self.filter( df ).items() }
-        pd.Series( total ).sort_values().plot.pie( ax=ax )
-        
+        pd.Series( total ).sort_values().plot.pie( ax=ax )        
 
 # file operations
 
