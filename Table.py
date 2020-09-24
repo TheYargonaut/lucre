@@ -37,7 +37,7 @@ class Table( tk.Frame ):
         if self.cells is None:
             self.firstCell()
             return
-        self.cells.append( [ self.makeCell( self.shape[ 0 ], c ) for c in range( shape[ 1 ] ) ] )
+        self.cells.append( [ self.makeCell( self.shape[ 0 ], c ) for c in range( self.shape[ 1 ] ) ] )
         self.shape[ 0 ] += 1
     
     def appendColumn( self ):
