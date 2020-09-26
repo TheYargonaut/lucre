@@ -3,7 +3,7 @@ import tkinter as tk
 import pandas as pd
 from Scrollable import Scrollable
 from Table import tableFromDf
-from Ledger import knownFmt
+from Ledger import internalFmt
 
 defaultColumn = 'ignore'
 
@@ -24,7 +24,7 @@ class ImportLedgerWindow( tk.Toplevel ):
     
     def updateFmt( self, value, pos ):
         self.headerFmt[ pos ] = value
-        if all( self.headerFmt.count( name ) == 1 for name in knownFmt[ 'internal' ] ):
+        if all( self.headerFmt.count( name ) == 1 for name in internalFmt ):
             self.confirm.configure( state=tk.NORMAL )
         else:
             self.confirm.configure( state=tk.DISABLED )
@@ -38,7 +38,7 @@ class ImportLedgerWindow( tk.Toplevel ):
             var = tk.StringVar( table )
             var.set( defaultColumn )
             colCb = lambda value, pos=i : self.updateFmt( value, pos )
-            menu = tk.OptionMenu( table, var, defaultColumn, *knownFmt[ 'internal' ], command=colCb )
+            menu = tk.OptionMenu( table, var, defaultColumn, *internalFmt, command=colCb )
             menu.grid( row=0, column=i )
             headerRow.append( menu )
         table.cells[ 0 ] = headerRow

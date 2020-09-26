@@ -1,9 +1,6 @@
 # implement basic spreadsheet-like display
 # TODO:
-# scrolling
-# display a df (integrate. Root?)
 # color highlighting
-# scroll on whole frame? good enough for now, obviously good scaling opportunity
 
 import tkinter as tk
 
@@ -24,9 +21,9 @@ class Table( tk.Frame ):
                        for r in range( shape[ 0 ] ) ]
         self.shape = list( shape )
     
-    def makeCell( self, row, column ):
-        cell = tk.Entry( self, exportselection=0 )
-        cell.grid( row=row, column=column )
+    def makeCell( self, row, column, **kwargs ):
+        cell = tk.Entry( self, exportselection=0, **kwargs )
+        cell.grid( row=row, column=column, sticky=tk.NSEW )
         return cell
 
     def firstCell( self ):
@@ -47,6 +44,19 @@ class Table( tk.Frame ):
         for r, row in enumerate( self.cells ):
             row.append( self.makeCell( r, self.shape[ 1 ] ) )
         self.shape[ 1 ] += 1
+
+class DfTable( Table ):
+    def __init__( self, parent, df, **kwargs ):
+        self.df = df.applymap( str )
+        Table.__init__( self, parent, shape=list( df.shape ), **kwargs )
+    
+    def makeCell( self, row, column, **kwargs ):
+        var = tk.StringVar( self )
+        var.set( str( self.df.iloc[ row, column ] ) )
+        def cb( *args, row=row, column=column, var=var ):
+            self.df.iloc[ row, column ] = var.get()
+        var.trace( 'w', cb )
+        return Table.makeCell( self, row, column, textvariable=var, **kwargs )
 
 def tableFromDf( parent, df, header=False, index=False ):
     shape = list( df.shape )

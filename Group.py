@@ -123,17 +123,22 @@ class Partition( object ):
         total = { title: data[ 'delta' ].sum() for title, data in self.filter( df ).items() }
         pd.Series( total ).sort_values().plot.pie( ax=ax )        
 
-# file operations
-
 defaultFile = os.path.join( '.', 'userdata', 'groups.yaml' )
+class GroupMan( object ):
+    def __init__( self, groups=[], parts=[] ):
+        self.groups = groups
+        self.parts = parts
+    
+    def load( self, filename=defaultFile ):
+        'load groups from file, add to existing groups. returns successful'
+        try:
+            with open( filename, 'r' ) as f:
+                self.groups += [ Group( **g ) for g in yaml.load( f, Loader=yaml.FullLoader ) ]
+            return True
+        except FileNotFoundError:
+            return False
 
-def load( filename=defaultFile ):
-    try:
-        with open( filename, 'r' ) as f:
-            return [ Group( **g ) for g in yaml.load( f, Loader=yaml.FullLoader ) ]
-    except FileNotFoundError:
-        return []
-
-def save( groups, filename=defaultFile ):
-    with open( filename, 'w' ) as f:
-        yaml.dump( [ dict( g ) for g in groups ], f )
+    def save( self, filename=defaultFile ):
+        'save groups to file'
+        with open( filename, 'w' ) as f:
+            yaml.dump( [ dict( g ) for g in self.groups ], f )

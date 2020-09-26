@@ -1,6 +1,6 @@
 import tkinter as tk
 from Scrollable import Scrollable
-from Table import tableFromDf, Table
+from Table import Table, DfTable
 # window for editing a group
 
 class EditGroupWindow( tk.Toplevel ):
@@ -12,12 +12,18 @@ class EditGroupWindow( tk.Toplevel ):
         self.build()
     
     def setListAddButton( self, table ):
-        addButton = tk.Button( table, text="+" )
+        addButton = tk.Button( table, text='+' )
         def cb( button=addButton, table=table ):
             addButton.grid( row=1 + len( table.cells ), column=0, sticky=tk.NSEW )
             table.appendRow()
         addButton.config( command=cb )
         addButton.grid( row=len( table.cells ), column=0, sticky=tk.NSEW )
+
+    def nameCb( self, *args ):
+        self.group.title = self.nameVar.get()
+    
+    def expenseCb( self, value ):
+        self.group.negate = value == 'expense'
 
     def build( self ):
         self.grid_rowconfigure( 0, weight=1 )
@@ -47,17 +53,19 @@ class EditGroupWindow( tk.Toplevel ):
 
         nameFrame = tk.Frame( mainFrame )
         nameFrame.grid( row=0, column=0, sticky=tk.NSEW )
-        name = tk.Entry( nameFrame, exportselection=0 )
+        self.nameVar = tk.StringVar( nameFrame )
+        self.nameVar.trace( 'w', self.nameCb )
+        name = tk.Entry( nameFrame, textvariable=self.nameVar, exportselection=0 )
         name.pack( side=tk.LEFT, fill=tk.X, expand=True )
-        var = tk.StringVar( nameFrame )
-        var.set( "income" )
-        style = tk.OptionMenu( nameFrame, var, "income", "expense" )
+        styleVar = tk.StringVar( nameFrame )
+        styleVar.set( "income" )
+        style = tk.OptionMenu( nameFrame, styleVar, "income", "expense", command=self.expenseCb )
         style.pack( side=tk.RIGHT, fill=tk.NONE, expand=False )
 
         scroll = Scrollable( mainFrame, True, True )
-        preview = tableFromDf( scroll, self.ledger.df.head( self.psize ) )
+        preview = DfTable( scroll, self.ledger.df )
         preview.pack( fill=tk.BOTH, expand=True )
-        scroll.grid( row=1, column=0, sticky=tk.NE )
+        scroll.grid( row=1, column=0, sticky=tk.NE + tk.S )
 
 def editGroupCb( master, group, ledger, psize ):
     def cb( master=master, group=group, ledger=ledger, psize=psize ):
