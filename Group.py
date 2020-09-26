@@ -1,7 +1,7 @@
 import os, yaml, pdb
 import pandas as pd
 from functools import reduce
-from Ledger import knownFmt
+from Format import internalFmt
 
 # basic event grouping
 
@@ -110,7 +110,7 @@ class Partition( object ):
             stack = pd.concat( [ stack, layer ] ).sort_values( 'date' ).reset_index( drop=True )
         stack[ title ] = stack[ 'delta' ].cumsum()
         stack.plot( x='date', y=title, ax=ax, drawstyle='steps-post' )
-        return stack[ knownFmt[ 'internal' ] ]
+        return stack[ internalFmt ]
 
     def plotStack( self, df, ax ):
         data = self.filter( df )

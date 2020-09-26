@@ -1,5 +1,6 @@
 from Group import Group, Partition, GroupMan
-from Ledger import loadFormats, saveFormats, LedgerMan
+from Ledger import LedgerMan
+from Format import FormatMan
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import pandas as pd
@@ -21,15 +22,16 @@ generalPart = Partition()
 class MainWindow( tk.Tk ):
     def __init__( self ):
         tk.Tk.__init__( self )
+        self.format = FormatMan()
         self.group = GroupMan()
         self.ledger = LedgerMan( updateCb=self.redraw )
         self.build()
         self.loadData()
     
     def loadData( self ):
-        self.formats = loadFormats()
-        self.ledger.load()
+        self.format.load()
         self.group.load()
+        self.ledger.load()
     
     def redraw( self, df, part=generalPart ):
         self.ax.cla()
@@ -61,6 +63,6 @@ top.mainloop()
 # save current settings
 if not os.path.exists( os.path.join( '.', 'userdata' ) ):
     os.mkdir( os.path.join( '.', 'userdata' ) )
-saveFormats( top.formats )
+top.format.save()
 top.ledger.save()
 top.group.save()

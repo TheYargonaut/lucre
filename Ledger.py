@@ -1,17 +1,7 @@
-import os, yaml
-import pandas as pd
+from Format import internalFmt
 
-knownFmt = { 'internal' : [ 'date', 'delta', 'memo' ] }
-defaultFmtFn = os.path.join( '.', 'userdata', 'formats.yaml' )
-def loadFormats( filename=defaultFmtFn ):
-    try:
-        with open( filename, 'r' ) as f:
-            return yaml.load( f, Loader=yaml.FullLoader )
-    except FileNotFoundError:
-        return knownFmt
-def saveFormats( formats, filename=defaultFmtFn ):
-    with open( filename, 'w' ) as f:
-        yaml.dump( formats, f )
+import os
+import pandas as pd
 
 # mass import tool
 # def fileGen( startDir, recurse=False, ext=None ):
@@ -21,18 +11,15 @@ def saveFormats( formats, filename=defaultFmtFn ):
 #                 yield( os.path.join( root, f ) )
 #         if not recurse:
 #             break
-# def ledgerGen( fileGen, fmt=knownFmt[ 'internal' ] ):
+# def ledgerGen( fileGen, fmt=internalFmt ):
 #     for f in fileGen:
 #         df = pd.read_csv( f, index_col=None, header=None, names=fmt )
-#         yield df[ knownFmt[ 'internal' ] ]
-# def massLoadLedger( startDir, fmt=knownFmt[ 'internal' ], recurse=False, ext=None ):
+#         yield df[ internalFmt ]
+# def massLoadLedger( startDir, fmt=internalFmt, recurse=False, ext=None ):
 #     'grabs all ledgers in a directory and preprocesses to internal format'
 #     fg = fileGen( startDir, recurse, ext )
 #     lg = ledgerGen( fg, fmt )
 #     return preprocess( pd.concat( lg, ignore_index=True ) )
-
-defaultFile = os.path.join( '.', 'userdata', 'ledger.csv' )
-internalFmt = [ 'date', 'delta', 'memo' ]
 
 def preprocess( df ):
     ledger = df[ internalFmt ].copy()
@@ -42,8 +29,10 @@ def preprocess( df ):
     ledger.reset_index( drop=True, inplace=True )
     return ledger
 
+defaultFile = os.path.join( '.', 'userdata', 'ledger.csv' )
+
 class LedgerMan( object ):
-    def __init__( self, df=pd.DataFrame( columns=knownFmt[ 'internal' ] ), updateCb=lambda:None ):
+    def __init__( self, df=pd.DataFrame( columns=internalFmt ), updateCb=lambda:None ):
         self.df = df
         self.updateCb = updateCb
     
