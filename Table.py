@@ -16,15 +16,21 @@ class Table( tk.Frame ):
             self.shape = [ 0, 0 ]
             return
         
-        self.cells = [ [ self.makeCell( r, c )
+        self.cells = [ [ self.initCell( r, c )
                          for c in range( shape[ 1 ] ) ]
                        for r in range( shape[ 0 ] ) ]
         self.shape = list( shape )
     
-    def makeCell( self, row, column, **kwargs ):
-        cell = tk.Entry( self, exportselection=0, **kwargs )
-        cell.grid( row=row, column=column, sticky=tk.NSEW )
+    def initCell( self, row, column, **kwargs ):
+        cell = self.makeCell( row, column, **kwargs )
+        self.placeCell( cell, row, column )
         return cell
+    
+    def placeCell( self, cell, row, column ):
+        cell.grid( row=row, column=column, sticky=tk.NSEW )
+
+    def makeCell( self, row, column, **kwargs ):
+        return tk.Entry( self, exportselection=0, **kwargs )
 
     def firstCell( self ):
         self.cells = [ [ self.makeCell( 0, 0 ) ] ]
@@ -57,18 +63,3 @@ class DfTable( Table ):
             self.df.iloc[ row, column ] = var.get()
         var.trace( 'w', cb )
         return Table.makeCell( self, row, column, textvariable=var, **kwargs )
-
-def tableFromDf( parent, df, header=False, index=False ):
-    shape = list( df.shape )
-    root = [ 0, 0 ]
-    if header:
-        shape[ 0 ] += 1
-        root[ 0 ] = 1
-    if index:
-        shape[ 1 ] += 1
-        root[ 1 ] += 1
-    table = Table( parent, shape=shape )
-    for rt, rd in zip( table.cells[ root[ 0 ]: ], df.iterrows() ):
-        for ct, cd in zip( rt[ root[ 1 ]: ], rd[ 1 ] ):
-            ct.insert( 0, str( cd ) )
-    return table

@@ -2,21 +2,41 @@
 import tkinter as tk
 import pandas as pd
 from Scrollable import Scrollable
-from Table import tableFromDf
+from Table import DfTable, Table
 from Ledger import internalFmt
 
 defaultColumn = 'ignore'
 
+class HeadingFmtTable( DfTable ):
+    def __init__( self, parent, df, headingCb, **kwargs ):
+        self.df = df.applymap( str )
+        self.headingCb = headingCb
+        shape = list( df.shape )
+        shape[ 0 ] += 1
+        Table.__init__( self, parent, shape=shape, **kwargs )
+    
+    def makeHeader( self, column, **kwargs ):
+        var = tk.StringVar( self )
+        var.set( defaultColumn )
+        def cb( value, pos=column ):
+            self.headingCb( value, pos )
+        return tk.OptionMenu( self, var, defaultColumn, *internalFmt, command=cb )
+    
+    def makeCell( self, row, column, **kwargs ):
+        if not row:
+            return self.makeHeader( column, **kwargs )
+        return DfTable.makeCell( self, row - 1, column, **kwargs )
+
 class ImportLedgerWindow( tk.Toplevel ):
-    def __init__( self, master, ledger, df, *args, **kwargs ):
+    def __init__( self, master, ledger, format, df, *args, **kwargs ):
         tk.Toplevel.__init__( self, master, *args, **kwargs )
         self.ledger = ledger
         self.df = df
-        self.headerFmt = []
+        self.headerFmt = [ defaultColumn ] * df.shape[ 1 ]
         self.build()
     
     def finalize( self ):
-        fmt = [ str( i ) if name == defaultColumn else name
+        fmt = [ name if name in internalFmt else str( i )
                 for i, name in enumerate( self.headerFmt ) ]
         self.df.columns = fmt
         self.ledger.add( self.df )
@@ -29,20 +49,6 @@ class ImportLedgerWindow( tk.Toplevel ):
         else:
             self.confirm.configure( state=tk.DISABLED )
 
-    def setTableHeader( self, table ):
-        'replace top row with dropdowns for setting column names'
-        headerRow = []
-        for i, cell in enumerate( table.cells[ 0 ] ):
-            self.headerFmt.append( defaultColumn )
-            cell.destroy()
-            var = tk.StringVar( table )
-            var.set( defaultColumn )
-            colCb = lambda value, pos=i : self.updateFmt( value, pos )
-            menu = tk.OptionMenu( table, var, defaultColumn, *internalFmt, command=colCb )
-            menu.grid( row=0, column=i )
-            headerRow.append( menu )
-        table.cells[ 0 ] = headerRow
-
     def build( self ):
         button = tk.Frame( self )
         button.pack( side=tk.BOTTOM, fill=tk.X )
@@ -53,16 +59,15 @@ class ImportLedgerWindow( tk.Toplevel ):
 
         scroll = Scrollable( self, horizontal=True, vertical=True )
         scroll.pack( side=tk.TOP, fill=tk.BOTH, expand=True )
-        table = tableFromDf( scroll, self.df, header=True )
-        self.setTableHeader( table )
+        table = HeadingFmtTable( scroll, self.df, self.updateFmt )
         table.pack( side=tk.TOP, fill=tk.BOTH, expand=True )
 
-def importLedgerCb( master, ledger ):
-    def cb( master=master, ledger=ledger ):
+def importLedgerCb( master, ledger, format ):
+    def cb( master=master, ledger=ledger, format=format ):
         f = tk.filedialog.askopenfilename()
         if not f:
             return
         df = pd.read_csv( f, index_col=None, header=None )
-        window = ImportLedgerWindow( master, ledger, df )
+        window = ImportLedgerWindow( master, ledger, format, df )
         master.wait_window( window )
     return cb

@@ -45,12 +45,14 @@ class MainWindow( tk.Tk ):
         self.chartWidget.get_tk_widget().grid( row=0, column=0, sticky=tk.NSEW )
 
     def build( self ):
+        self.grid_rowconfigure( 0, weight=1 )
+        self.grid_columnconfigure( 0, weight=1 )
         self.makeChart()
 
         controlFrame = tk.Frame( self )
         controlFrame.grid( row=0, column=1, sticky=tk.NSEW )
 
-        importLedgerButton = tk.Button( controlFrame, text="Import Ledger", command=importLedgerCb( self, self.ledger ) )
+        importLedgerButton = tk.Button( controlFrame, text="Import Ledger", command=importLedgerCb( self, self.ledger, self.format ) )
         importLedgerButton.pack( side=tk.TOP, fill=tk.X )
 
         addGroupButton = tk.Button( controlFrame, text="New Group", command=editGroupCb( self, Group(), self.ledger, 20 ) )
