@@ -1,7 +1,3 @@
-# implement basic spreadsheet-like display
-# TODO:
-# color highlighting
-
 import tkinter as tk
 
 class Table( tk.Frame ):
@@ -52,6 +48,7 @@ class Table( tk.Frame ):
         self.shape[ 1 ] += 1
 
 class DfTable( Table ):
+    'table initialized from and backed by a dataframe'
     def __init__( self, parent, df, **kwargs ):
         self.df = df.applymap( str )
         Table.__init__( self, parent, shape=list( df.shape ), **kwargs )
@@ -63,3 +60,6 @@ class DfTable( Table ):
             self.df.iloc[ row, column ] = var.get()
         var.trace( 'w', cb )
         return Table.makeCell( self, row, column, textvariable=var, **kwargs )
+    
+    #def appendRow( self )
+    #def appendColumn( self )

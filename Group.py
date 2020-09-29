@@ -5,7 +5,7 @@ from Format import internalFmt
 
 # basic event grouping
 
-def matchAny( regexList, df, column='comment' ):
+def matchAny( regexList, df, column='memo' ):
     return reduce( lambda x,y: x | y,
                    ( df[ column ].str.contains( r ) 
                      for r in regexList ) )
@@ -27,7 +27,7 @@ class Group( object ):
     def filter( self, df ):
         '''returns filtered pandas dataframe
         first applies whitelist, then blacklist'''
-        f = df[ 'comment' ].str.contains( '.*' )
+        f = df[ 'memo' ].str.contains( '.*' )
         if self.whitelist:
             f &= self.applyWhitelist( df )
         if self.blacklist:
@@ -69,10 +69,10 @@ class Partition( object ):
             df = df[ ~matchAny( self.blacklist, df ) ]
         early = pd.DataFrame( dict( date=df[ 'date' ].min(),
                                     delta=0,
-                                    comment='' ), index=[ 0 ] )
+                                    memo='' ), index=[ 0 ] )
         late = pd.DataFrame( dict( date=df[ 'date' ].max(),
                                    delta=0,
-                                   comment='' ), index=[ 0 ] )
+                                   memo='' ), index=[ 0 ] )
         r = {}
         for g in self.groups:
             f = g.filter( df )
