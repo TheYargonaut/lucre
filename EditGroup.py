@@ -27,8 +27,16 @@ class EditGroupWindow( tk.Toplevel ):
                     c.config( background=self.highlight ) # highlight row
             if l and not m:
                 for c in r:
-                    c.config( background=self.ignored ) # highlight row
+                    c.config( background=self.ignored ) # un-highlight row
         self.lastMask = mask
+    
+    def whiteListCb( self, idx, txt ):
+        self.group.whitelist[ idx ] = txt
+        self.matchListCb()
+    
+    def blackListCb( self, idx, txt ):
+        self.group.blacklist[ idx ] = txt
+        self.matchListCb()
     
     def nameCb( self, *args ):
         self.group.title = self.nameVar.get()
@@ -53,13 +61,13 @@ class EditGroupWindow( tk.Toplevel ):
         whiteLabel.grid( row=0, column=0, sticky=tk.NSEW )
         whiteScroll = Scrollable( listFrame, vertical=True )
         whiteScroll.grid( row=1, column=0, sticky=tk.NSEW )
-        whiteList = ListView( whiteScroll, self.group.whitelist, '+', self.matchListCb )
+        whiteList = ListView( whiteScroll, self.group.whitelist, '+', self.whiteListCb )
         whiteList.pack()
         blackLabel = tk.Label( listFrame, text='blacklist' )
         blackLabel.grid( row=2, column=0, sticky=tk.NSEW )
         blackScroll = Scrollable( listFrame, vertical=True )
         blackScroll.grid( row=3, column=0, sticky=tk.NSEW )
-        blackList = ListView( blackScroll, self.group.blacklist, '+', self.matchListCb )
+        blackList = ListView( blackScroll, self.group.blacklist, '+', self.blackListCb )
         blackList.pack()
         doneButton = tk.Button( listFrame, text="Done", command=self.destroy )
         doneButton.grid( row=5, column=0, sticky=tk.NSEW )

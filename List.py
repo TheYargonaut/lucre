@@ -11,25 +11,28 @@ class ListView( tk.Frame ):
             # can I use pack to make button movement automatic?
             self.addButton.pack( side=tk.BOTTOM, fill=tk.X, expand=True )
         self.cb = cb
-        self.cells = [ self.initCell( i ) for i in range( len( self.back ) ) ]
+        if isinstance( back, dict ):
+            self.cells = [ self.initCell( k ) for k in self.back.keys() ]
+        else:
+            self.cells = [ self.initCell( i ) for i, _ in enumerate( self.back )  ]
+
     
     def appendCell( self ):
         self.back.append( '' )
         self.cells.append( self.initCell( len( self.back ) - 1 ) )
     
-    def initCell( self, index ):
-        cell = self.makeCell( index )
-        self.placeCell( cell, index )
+    def initCell( self, label ):
+        cell = self.makeCell( label )
+        self.placeCell( cell, label )
         return cell
 
-    def makeCell( self, index, **kwargs ):
+    def makeCell( self, label, **kwargs ):
         var = tk.StringVar( self )
-        var.set( str( self.back[ index ] ) )
-        def cb( *args, index=index, var=var ):
-            self.back[ index ] = var.get()
-            self.cb( index )
+        var.set( str( self.back[ label ] ) )
+        def cb( *args, label=label, var=var ):
+            self.cb( label, var.get() )
         var.trace( 'w', cb )
         return tk.Entry( self, textvariable=var, **kwargs )
 
-    def placeCell( self, cell, index ):
+    def placeCell( self, cell, label ):
         cell.pack( side=tk.TOP, fill=tk.X, expand=True )

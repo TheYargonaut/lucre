@@ -125,15 +125,23 @@ class Partition( object ):
 
 defaultFile = os.path.join( '.', 'userdata', 'groups.yaml' )
 class GroupMan( object ):
-    def __init__( self, groups=[], parts=[] ):
-        self.groups = groups
-        self.parts = parts
+    def __init__( self, groups=[] ):
+        self.groups = { i:g for i, g in enumerate( groups ) }
+        self.uids = len( self.groups )
+    
+    def create( self ):
+        i = self.uids
+        self.uids += 1
+        self.groups[ i ] = Group( "Untitled" )
+        return i
     
     def load( self, filename=defaultFile ):
         'load groups from file, add to existing groups. returns successful'
         try:
             with open( filename, 'r' ) as f:
-                self.groups += [ Group( **g ) for g in yaml.load( f, Loader=yaml.FullLoader ) ]
+                ingroup = { i:Group( **g ) for i, g in enumerate( yaml.load( f, Loader=yaml.FullLoader ), start=self.uids ) }
+                self.uids += len( ingroup )
+                self.groups.update( ingroup )
             return True
         except FileNotFoundError:
             return False
@@ -141,4 +149,4 @@ class GroupMan( object ):
     def save( self, filename=defaultFile ):
         'save groups to file'
         with open( filename, 'w' ) as f:
-            yaml.dump( [ dict( g ) for g in self.groups ], f )
+            yaml.dump( [ dict( g ) for g in self.groups.values() ], f )

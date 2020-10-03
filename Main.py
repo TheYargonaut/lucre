@@ -8,6 +8,8 @@ import os
 import tkinter as tk
 from ImportLedger import importLedgerCb
 from EditGroup import editGroupCb
+from List import ListView
+from Scrollable import Scrollable
 
 import pdb
 
@@ -19,14 +21,44 @@ pd.plotting.register_matplotlib_converters()
 # ], [] ), negate=True )
 generalPart = Partition()
 
+class GroupList( ListView ):
+    def __init__( self, parent, back=[], addButton=None, addCb=lambda:None, activeCb=lambda idx:None, editCb=lambda idx:None, **kwargs ):
+        self.addCb = addCb
+        self.activeCb = activeCb
+        self.editCb = editCb
+        ListView.__init__( self, parent, back, addButton, **kwargs )
+
+    def makeCell( self, label, **kwargs ):
+        groupCell = tk.Frame( self )
+        def activate( *args, label=label ):
+            self.activeCb( label )
+        activator = tk.Button( groupCell, text=self.back[ label ].title, command=activate )
+        activator.grid( row=0, column=0, rowspan=2, sticky=tk.NSEW )
+        def remove( *args, groupCell=groupCell, label=label ):
+            del self.back[ label ] # needs to actually link back to the "back" in the manager
+            if self.back:
+                self.activeCb( next( k for k in self.back.keys() ) )
+            groupCell.destroy()
+        remover = tk.Button( groupCell, text='X', command=remove )
+        remover.grid( row=0, column=1, sticky=tk.NSEW )
+        def edit( *args, label=label ):
+            self.editCb( label )
+        editor = tk.Button( groupCell, text='E', command=edit )
+        editor.grid( row=1, column=1, sticky=tk.NSEW )
+        return groupCell
+    
+    def appendCell( self ):
+        self.cells.append( self.initCell( self.addCb() ) )
+
 class MainWindow( tk.Tk ):
     def __init__( self ):
         tk.Tk.__init__( self )
+        self.makeChart()
         self.format = FormatMan()
         self.group = GroupMan()
         self.ledger = LedgerMan( updateCb=self.redraw )
-        self.build()
         self.loadData()
+        self.build()
     
     def loadData( self ):
         self.format.load()
@@ -43,11 +75,14 @@ class MainWindow( tk.Tk ):
         self.ax = fig.add_subplot( 111 )
         self.chartWidget = FigureCanvasTkAgg( fig, self )
         self.chartWidget.get_tk_widget().grid( row=0, column=0, sticky=tk.NSEW )
+    
+    def editGroupCb( self, idx ):
+        cb = editGroupCb( self, None, self.ledger, 20 )
+        cb( group=self.group.groups[ idx ] )
 
     def build( self ):
         self.grid_rowconfigure( 0, weight=1 )
         self.grid_columnconfigure( 0, weight=1 )
-        self.makeChart()
 
         controlFrame = tk.Frame( self )
         controlFrame.grid( row=0, column=1, sticky=tk.NSEW )
@@ -55,8 +90,10 @@ class MainWindow( tk.Tk ):
         importLedgerButton = tk.Button( controlFrame, text="Import Ledger", command=importLedgerCb( self, self.ledger, self.format ) )
         importLedgerButton.pack( side=tk.TOP, fill=tk.X )
 
-        addGroupButton = tk.Button( controlFrame, text="New Group", command=editGroupCb( self, Group(), self.ledger, 20 ) )
-        addGroupButton.pack( side=tk.BOTTOM, fill=tk.X )
+        groupScroll = Scrollable( controlFrame, vertical=True )
+        groupScroll.pack( side=tk.TOP, fill=tk.BOTH, expand=True )
+        groupList = GroupList( groupScroll, self.group.groups, "New Group", self.group.create, lambda idx:None, self.editGroupCb )
+        groupList.pack()
 
 # make the window
 top = MainWindow()
