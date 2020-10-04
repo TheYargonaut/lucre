@@ -22,7 +22,7 @@ pd.plotting.register_matplotlib_converters()
 generalPart = Partition()
 
 class GroupList( ListView ):
-    def __init__( self, parent, back=[], addButton=None, addCb=lambda:None, activeCb=lambda idx:None, editCb=lambda idx:None, **kwargs ):
+    def __init__( self, parent, back=[], addButton=None, addCb=lambda:None, activeCb=lambda idx:None, editCb=lambda idx, activator:None, **kwargs ):
         self.addCb = addCb
         self.activeCb = activeCb
         self.editCb = editCb
@@ -41,8 +41,8 @@ class GroupList( ListView ):
             groupCell.destroy()
         remover = tk.Button( groupCell, text='X', command=remove )
         remover.grid( row=0, column=1, sticky=tk.NSEW )
-        def edit( *args, label=label ):
-            self.editCb( label )
+        def edit( *args, label=label, activator=activator ):
+            self.editCb( label, activator )
         editor = tk.Button( groupCell, text='E', command=edit )
         editor.grid( row=1, column=1, sticky=tk.NSEW )
         return groupCell
@@ -76,9 +76,8 @@ class MainWindow( tk.Tk ):
         self.chartWidget = FigureCanvasTkAgg( fig, self )
         self.chartWidget.get_tk_widget().grid( row=0, column=0, sticky=tk.NSEW )
     
-    def editGroupCb( self, idx ):
-        cb = editGroupCb( self, None, self.ledger, 20 )
-        cb( group=self.group.groups[ idx ] )
+    def editGroupCb( self, idx, activator ):
+        editGroupCb( self, self.group.groups[ idx ], self.ledger, 20, activator )()
 
     def build( self ):
         self.grid_rowconfigure( 0, weight=1 )

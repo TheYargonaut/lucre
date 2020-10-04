@@ -2,15 +2,18 @@ import tkinter as tk
 from Scrollable import Scrollable
 from Table import Table, DfTable
 from List import ListView
+from Group import Group
 # window for editing a group
 
 class EditGroupWindow( tk.Toplevel ):
-    def __init__( self, master, group, ledger, psize, *args, **kwargs ):
+    def __init__( self, master, group, ledger, psize, titleWidget, *args, **kwargs ):
         tk.Toplevel.__init__( self, master, *args, **kwargs )
         self.lastMask = None
-        self.group = group
+        self.groupBack = group
+        self.group = Group( **dict( group ) )
         self.ledger = ledger
         self.psize = psize
+        self.titleWidget = titleWidget
         self.highlight = "white"
         self.ignored = "#E00E00E00" # gray
         self.build()
@@ -27,8 +30,21 @@ class EditGroupWindow( tk.Toplevel ):
                     c.config( background=self.highlight ) # highlight row
             if l and not m:
                 for c in r:
-                    c.config( background=self.ignored ) # un-highlight row
+                    c.config( background=self.ignored ) # unhighlight row
         self.lastMask = mask
+    
+    def finalize( self ):
+        self.groupBack.whitelist = self.group.whitelist
+        self.groupBack.blacklist = self.group.blacklist
+        self.groupBack.negate = self.groupBack.negate
+        self.groupBack.title = self.group.title
+        self.titleWidget.config( text=self.group.title )
+        self.ledger.updateCb( self.ledger.df )
+        self.destroy()
+    
+    def destroy( self, *args, **kwargs ):
+        # may need "confirm" and "cancel" to mirror ImportLedger instead of making it a continuous-feedback
+        tk.Toplevel.destroy( self, *args, **kwargs )
     
     def whiteListCb( self, idx, txt ):
         self.group.whitelist[ idx ] = txt
@@ -69,8 +85,13 @@ class EditGroupWindow( tk.Toplevel ):
         blackScroll.grid( row=3, column=0, sticky=tk.NSEW )
         blackList = ListView( blackScroll, self.group.blacklist, '+', self.blackListCb )
         blackList.pack()
-        doneButton = tk.Button( listFrame, text="Done", command=self.destroy )
-        doneButton.grid( row=5, column=0, sticky=tk.NSEW )
+
+        button = tk.Frame( self )
+        button.grid( row=1, column=0, columnspan=2, sticky=tk.E )
+        cancel = tk.Button( button, text="Cancel", command=self.destroy )
+        cancel.pack( side=tk.RIGHT )
+        confirm = tk.Button( button, text="Confirm", command=self.finalize )
+        confirm.pack( side=tk.RIGHT )
 
         nameFrame = tk.Frame( mainFrame )
         nameFrame.grid( row=0, column=0, sticky=tk.NSEW )
@@ -89,8 +110,8 @@ class EditGroupWindow( tk.Toplevel ):
         self.preview.pack( fill=tk.BOTH, expand=True )
         scroll.grid( row=1, column=0, sticky=tk.NE + tk.S )
 
-def editGroupCb( master, group, ledger, psize ):
-    def cb( master=master, group=group, ledger=ledger, psize=psize ):
-        window = EditGroupWindow( master, group, ledger, psize )
+def editGroupCb( master, group, ledger, psize, titleWidget ):
+    def cb( master=master, group=group, ledger=ledger, psize=psize, titleWidget=titleWidget ):
+        window = EditGroupWindow( master, group, ledger, psize, titleWidget )
         master.wait_window( window )
     return cb
