@@ -35,7 +35,7 @@ class Group( object ):
         return f
     
     def plotDelta( self, df, ax ):
-        df = df[ self.filter( df ) ]
+        df = df[ self.filter( df ) ].copy()
         if self.negate:
             df[ self.title ] = -df[ 'delta' ]
         else:
@@ -43,7 +43,7 @@ class Group( object ):
         df.plot( x='date', y=self.title, ax=ax )
     
     def plotCumulative( self, df, ax ):
-        df = df[ self.filter( df ) ]
+        df = df[ self.filter( df ) ].copy()
         if self.negate:
             df[ self.title ] = -df[ 'delta' ].cumsum()
         else:

@@ -57,6 +57,7 @@ class MainWindow( tk.Tk ):
         self.format = FormatMan()
         self.group = GroupMan()
         self.ledger = LedgerMan( updateCb=self.redraw )
+        self.setPart()
         self.loadData()
         self.build()
     
@@ -65,9 +66,9 @@ class MainWindow( tk.Tk ):
         self.group.load()
         self.ledger.load()
     
-    def redraw( self, df, part=generalPart ):
+    def redraw( self, df ):
         self.ax.cla()
-        part.plotDelta( df, self.ax )
+        self.part.plotDelta( df, self.ax )
         self.chartWidget.draw()
     
     def makeChart( self ):
@@ -78,6 +79,11 @@ class MainWindow( tk.Tk ):
     
     def editGroupCb( self, idx, activator ):
         editGroupCb( self, self.group.groups[ idx ], self.ledger, 20, activator )()
+    
+    def setPart( self, part=Partition() ):
+        # set group/partition to be drawn
+        self.part = part
+        self.redraw( self.ledger.df )
 
     def build( self ):
         self.grid_rowconfigure( 0, weight=1 )
@@ -91,7 +97,7 @@ class MainWindow( tk.Tk ):
 
         groupScroll = Scrollable( controlFrame, vertical=True )
         groupScroll.pack( side=tk.TOP, fill=tk.BOTH, expand=True )
-        groupList = GroupList( groupScroll, self.group.groups, "New Group", self.group.create, lambda idx:None, self.editGroupCb )
+        groupList = GroupList( groupScroll, self.group.groups, "New Group", self.group.create, lambda idx:self.setPart( self.group.groups[ idx ] ), self.editGroupCb )
         groupList.pack()
 
 # make the window
