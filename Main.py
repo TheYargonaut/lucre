@@ -15,11 +15,16 @@ import pdb
 
 pd.plotting.register_matplotlib_converters()
 
-# set up managers
-# expensePart = Partition( [ g for g in groups if g.negate ], sum( [
-#    g.whitelist + g.blacklist for g in groups if not g.negate
-# ], [] ), negate=True )
-generalPart = Partition()
+class ToggleButton( tk.Button ):
+    def __init__( self, *args, command=lambda state:None, **kwargs):
+        def cb( *args ):
+            if self.config( 'relief' )[ -1 ] == 'sunken':
+                self.config( relief="raised" )
+                command( False )
+            else:
+                self.config( relief="sunken" )
+                command( True )
+        tk.Button.__init__( self, *args, command=cb, **kwargs )
 
 class GroupList( ListView ):
     def __init__( self, parent, back=[], addButton=None, addCb=lambda:None, activeCb=lambda idx:None, editCb=lambda idx, activator:None, **kwargs ):
@@ -30,14 +35,14 @@ class GroupList( ListView ):
 
     def makeCell( self, label, **kwargs ):
         groupCell = tk.Frame( self )
-        def activate( *args, label=label ):
-            self.activeCb( label )
-        activator = tk.Button( groupCell, text=self.back[ label ].title, command=activate )
+        groupCell.grid_columnconfigure( 0, weight=1 )
+        def activate( state, label=label ):
+            self.activeCb( label, state )
+        activator = ToggleButton( groupCell, text=self.back[ label ].title, command=activate )
         activator.grid( row=0, column=0, rowspan=2, sticky=tk.NSEW )
         def remove( *args, groupCell=groupCell, label=label ):
-            del self.back[ label ] # needs to actually link back to the "back" in the manager
-            if self.back:
-                self.activeCb( next( k for k in self.back.keys() ) )
+            self.activeCb( label, False )
+            del self.back[ label ]
             groupCell.destroy()
         remover = tk.Button( groupCell, text='X', command=remove )
         remover.grid( row=0, column=1, sticky=tk.NSEW )
@@ -55,9 +60,8 @@ class MainWindow( tk.Tk ):
         tk.Tk.__init__( self )
         self.makeChart()
         self.format = FormatMan()
-        self.group = GroupMan()
-        self.ledger = LedgerMan( updateCb=self.redraw )
-        self.setPart()
+        self.group = GroupMan( updateCb=self.setPart )
+        self.ledger = LedgerMan( updateCb=self.setDf )
         self.loadData()
         self.build()
     
@@ -66,9 +70,10 @@ class MainWindow( tk.Tk ):
         self.group.load()
         self.ledger.load()
     
-    def redraw( self, df ):
+    def redraw( self, df, active ):
         self.ax.cla()
-        self.part.plotDelta( df, self.ax )
+        for a in active:
+            self.group.groups[ a ].plotDelta( df, self.ax )
         self.chartWidget.draw()
     
     def makeChart( self ):
@@ -80,10 +85,12 @@ class MainWindow( tk.Tk ):
     def editGroupCb( self, idx, activator ):
         editGroupCb( self, self.group.groups[ idx ], self.ledger, 20, activator )()
     
-    def setPart( self, part=Partition() ):
+    def setDf( self, df ):
+        self.redraw( df=df, active=self.group.active )
+
+    def setPart( self, active ):
         # set group/partition to be drawn
-        self.part = part
-        self.redraw( self.ledger.df )
+        self.redraw( df=self.ledger.df, active=active )
 
     def build( self ):
         self.grid_rowconfigure( 0, weight=1 )
@@ -97,7 +104,7 @@ class MainWindow( tk.Tk ):
 
         groupScroll = Scrollable( controlFrame, vertical=True )
         groupScroll.pack( side=tk.TOP, fill=tk.BOTH, expand=True )
-        groupList = GroupList( groupScroll, self.group.groups, "New Group", self.group.create, lambda idx:self.setPart( self.group.groups[ idx ] ), self.editGroupCb )
+        groupList = GroupList( groupScroll, self.group.groups, "New Group", self.group.create, self.group.setActive, self.editGroupCb )
         groupList.pack()
 
 # make the window

@@ -125,15 +125,24 @@ class Partition( object ):
 
 defaultFile = os.path.join( '.', 'userdata', 'groups.yaml' )
 class GroupMan( object ):
-    def __init__( self, groups=[] ):
+    def __init__( self, groups=[], updateCb=lambda active:None ):
         self.groups = { i:g for i, g in enumerate( groups ) }
+        self.updateCb = updateCb
         self.uids = len( self.groups )
+        self.active = set() # keys pointing to active groups
     
     def create( self ):
         i = self.uids
         self.uids += 1
         self.groups[ i ] = Group( "Untitled" )
         return i
+    
+    def setActive( self, key, state ):
+        if state:
+            self.active.add( key )
+        else:
+            self.active.discard( key )
+        self.updateCb( self.active )
     
     def load( self, filename=defaultFile ):
         'load groups from file, add to existing groups. returns successful'
@@ -142,6 +151,7 @@ class GroupMan( object ):
                 ingroup = { i:Group( **g ) for i, g in enumerate( yaml.load( f, Loader=yaml.FullLoader ), start=self.uids ) }
                 self.uids += len( ingroup )
                 self.groups.update( ingroup )
+                self.updateCb( self.active )
             return True
         except FileNotFoundError:
             return False
