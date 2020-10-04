@@ -121,7 +121,7 @@ class Partition( object ):
     
     def plotPie( self, df, ax ):
         total = { title: abs( data[ 'delta' ].sum() ) for title, data in self.filter( df ).items() }
-        pd.Series( total ).sort_values().plot.pie( ax=ax )
+        pd.Series( total ).sort_values().plot.pie( ax=ax, ylabel="", normalize=True )
 
 defaultFile = os.path.join( '.', 'userdata', 'groups.yaml' )
 class GroupMan( object ):

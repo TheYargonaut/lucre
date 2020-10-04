@@ -27,7 +27,7 @@ class ToggleButton( tk.Button ):
         tk.Button.__init__( self, *args, command=cb, **kwargs )
 
 class GroupList( ListView ):
-    def __init__( self, parent, back=[], addButton=None, addCb=lambda:None, activeCb=lambda idx:None, editCb=lambda idx, activator:None, **kwargs ):
+    def __init__( self, parent, back=[], addButton=None, addCb=lambda:None, activeCb=lambda idx, state:None, editCb=lambda idx, activator:None, **kwargs ):
         self.addCb = addCb
         self.activeCb = activeCb
         self.editCb = editCb
@@ -55,14 +55,31 @@ class GroupList( ListView ):
     def appendCell( self ):
         self.cells.append( self.initCell( self.addCb() ) )
 
+typesInclusive = [ "delta", "cumulative" ]
+typesExclusive = typesInclusive + [ "stack", "pie" ]
+choiceToFunc = dict(
+    delta="plotDelta",
+    cumulative="plotCumulative",
+    stack="plotStack",
+    pie="plotPie",
+)
+
+def setMenuOptions( widget, var, options ):
+    if var.get() not in options:
+        var.set( next( o for o in options ) )
+    widget[ 'menu' ].delete( 0, 'end' )
+    for o in options:
+        widget[ 'menu' ].add_command( label=o, command=tk._setit( var, o ) )
+
 class MainWindow( tk.Tk ):
     def __init__( self ):
         tk.Tk.__init__( self )
+        self.plotType = "plotDelta"
         self.exclusive = True
         self.makeChart()
         self.format = FormatMan()
-        self.group = GroupMan( updateCb=self.setPart )
-        self.ledger = LedgerMan( updateCb=self.setDf )
+        self.group = GroupMan( updateCb=self.redraw )
+        self.ledger = LedgerMan( updateCb=self.redraw )
         self.loadData()
         self.build()
     
@@ -71,15 +88,20 @@ class MainWindow( tk.Tk ):
         self.group.load()
         self.ledger.load()
     
-    def redraw( self, df, active ):
+    def redraw( self, *args ):
+        df = self.ledger.df
+        active = self.group.active
         self.fig.clf()
+        if not active:
+            self.chartWidget.draw()
+            return
         self.ax = self.fig.add_subplot( 111 )
         if self.exclusive:
-            for a in active:
-                self.group.groups[ a ].plotDelta( df, self.ax )
-        else:
             part = Partition( groups=[ self.group.groups[ a ] for a in active ] )
-            part.plotPie( df, self.ax )
+            getattr( part, self.plotType )( df, self.ax )
+        else:
+            for a in active:
+                getattr( self.group.groups[ a ], self.plotType )( df, self.ax )
         self.chartWidget.draw()
     
     def makeChart( self ):
@@ -87,14 +109,16 @@ class MainWindow( tk.Tk ):
         self.chartWidget = FigureCanvasTkAgg( self.fig, self )
         self.chartWidget.get_tk_widget().grid( row=0, column=0, sticky=tk.NSEW )
     
-    def editGroupCb( self, idx, activator ):
-        editGroupCb( self, self.group.groups[ idx ], self.ledger, 20, activator )()
+    def editGroup( self, idx, activator ):
+        editGroup( self, self.group.groups[ idx ], self.ledger, 20, activator )()
+        
+    def setPlotType( self, *args ):
+        self.plotType = choiceToFunc[ self.plotTypeVar.get() ]
+        self.redraw()
     
-    def setDf( self, df ):
-        self.redraw( df=df, active=self.group.active )
-
-    def setPart( self, active ):
-        self.redraw( df=self.ledger.df, active=active )
+    def activateGroup( self, label, state ):
+        self.group.setActive( label, state )
+        self.redraw()
 
     def build( self ):
         self.grid_rowconfigure( 0, weight=1 )
@@ -108,15 +132,22 @@ class MainWindow( tk.Tk ):
 
         groupScroll = Scrollable( controlFrame, vertical=True )
         groupScroll.pack( side=tk.TOP, fill=tk.BOTH, expand=True )
-        groupList = GroupList( groupScroll, self.group.groups, "New Group", self.group.create, self.group.setActive, self.editGroupCb )
+        groupList = GroupList( groupScroll, self.group.groups, "New Group", self.group.create, self.activateGroup, self.editGroup )
         groupList.pack()
+        
+        self.plotTypeVar = tk.StringVar()
+        self.plotTypeVar.set( typesExclusive[ 0 ] )
+        self.plotTypeVar.trace( "w", self.setPlotType )
+        self.plotTypeMenu = tk.OptionMenu( controlFrame, self.plotTypeVar, *typesExclusive )
+        self.plotTypeMenu.pack( side=tk.BOTTOM, fill=tk.X )
 
         exclusiveVar = tk.IntVar()
         exclusiveVar.set( 1 )
         def exclusiveCb():
             self.exclusive = bool( exclusiveVar.get() )
-            self.redraw( self.ledger.df, self.group.active )
-                
+            setMenuOptions( self.plotTypeMenu, self.plotTypeVar, typesExclusive if self.exclusive else typesInclusive )
+            self.redraw()
+
         exclusiveToggle = tk.Checkbutton( controlFrame, variable=exclusiveVar, text="Exclusive", command=exclusiveCb )
         exclusiveToggle.pack( side=tk.BOTTOM, fill=tk.X )
 
