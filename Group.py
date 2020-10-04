@@ -120,8 +120,8 @@ class Partition( object ):
         self.plotLayer( stack, data[ 'other' ], 'other', ax )
     
     def plotPie( self, df, ax ):
-        total = { title: data[ 'delta' ].sum() for title, data in self.filter( df ).items() }
-        pd.Series( total ).sort_values().plot.pie( ax=ax )        
+        total = { title: abs( data[ 'delta' ].sum() ) for title, data in self.filter( df ).items() }
+        pd.Series( total ).sort_values().plot.pie( ax=ax )
 
 defaultFile = os.path.join( '.', 'userdata', 'groups.yaml' )
 class GroupMan( object ):

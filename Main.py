@@ -58,6 +58,7 @@ class GroupList( ListView ):
 class MainWindow( tk.Tk ):
     def __init__( self ):
         tk.Tk.__init__( self )
+        self.exclusive = True
         self.makeChart()
         self.format = FormatMan()
         self.group = GroupMan( updateCb=self.setPart )
@@ -71,15 +72,19 @@ class MainWindow( tk.Tk ):
         self.ledger.load()
     
     def redraw( self, df, active ):
-        self.ax.cla()
-        for a in active:
-            self.group.groups[ a ].plotDelta( df, self.ax )
+        self.fig.clf()
+        self.ax = self.fig.add_subplot( 111 )
+        if self.exclusive:
+            for a in active:
+                self.group.groups[ a ].plotDelta( df, self.ax )
+        else:
+            part = Partition( groups=[ self.group.groups[ a ] for a in active ] )
+            part.plotPie( df, self.ax )
         self.chartWidget.draw()
     
     def makeChart( self ):
-        fig = plt.Figure()
-        self.ax = fig.add_subplot( 111 )
-        self.chartWidget = FigureCanvasTkAgg( fig, self )
+        self.fig = plt.Figure()
+        self.chartWidget = FigureCanvasTkAgg( self.fig, self )
         self.chartWidget.get_tk_widget().grid( row=0, column=0, sticky=tk.NSEW )
     
     def editGroupCb( self, idx, activator ):
@@ -89,7 +94,6 @@ class MainWindow( tk.Tk ):
         self.redraw( df=df, active=self.group.active )
 
     def setPart( self, active ):
-        # set group/partition to be drawn
         self.redraw( df=self.ledger.df, active=active )
 
     def build( self ):
@@ -106,6 +110,15 @@ class MainWindow( tk.Tk ):
         groupScroll.pack( side=tk.TOP, fill=tk.BOTH, expand=True )
         groupList = GroupList( groupScroll, self.group.groups, "New Group", self.group.create, self.group.setActive, self.editGroupCb )
         groupList.pack()
+
+        exclusiveVar = tk.IntVar()
+        exclusiveVar.set( 1 )
+        def exclusiveCb():
+            self.exclusive = bool( exclusiveVar.get() )
+            self.redraw( self.ledger.df, self.group.active )
+                
+        exclusiveToggle = tk.Checkbutton( controlFrame, variable=exclusiveVar, text="Exclusive", command=exclusiveCb )
+        exclusiveToggle.pack( side=tk.BOTTOM, fill=tk.X )
 
 # make the window
 top = MainWindow()
