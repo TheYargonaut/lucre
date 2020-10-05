@@ -1,15 +1,16 @@
-from Group import Group, Partition, GroupMan
-from Ledger import LedgerMan
-from Format import FormatMan
-import matplotlib.pyplot as plt
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-import pandas as pd
-import os
-import tkinter as tk
-from ImportLedger import importLedgerCb
 from EditGroup import editGroupCb
+from Format import FormatMan
+from Group import Partition, GroupMan
+from ImportLedger import importLedgerCb
+from Ledger import LedgerMan
 from List import ListView
 from Scrollable import Scrollable
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from tkinter import ttk
+import matplotlib.pyplot as plt
+import os
+import pandas as pd
+import tkinter as tk
 
 import pdb
 
@@ -34,21 +35,23 @@ class GroupList( ListView ):
         ListView.__init__( self, parent, back, addButton, **kwargs )
 
     def makeCell( self, label, **kwargs ):
-        groupCell = tk.Frame( self )
+        groupCell = ttk.Frame( self )
         groupCell.grid_columnconfigure( 0, weight=1 )
-        def activate( state, label=label ):
-            self.activeCb( label, state )
-        activator = ToggleButton( groupCell, text=self.back[ label ].title, command=activate )
+        var = tk.IntVar()
+        var.set( 0 )
+        def activate( label=label, var=var ):
+            self.activeCb( label, bool( var.get() ) )
+        activator = ttk.Checkbutton( groupCell, variable=var, text=self.back[ label ].title, command=activate )
         activator.grid( row=0, column=0, rowspan=2, sticky=tk.NSEW )
         def remove( *args, groupCell=groupCell, label=label ):
             self.activeCb( label, False )
             del self.back[ label ]
             groupCell.destroy()
-        remover = tk.Button( groupCell, text='X', command=remove )
+        remover = ttk.Button( groupCell, text='X', command=remove )
         remover.grid( row=0, column=1, sticky=tk.NSEW )
         def edit( *args, label=label, activator=activator ):
             self.editCb( label, activator )
-        editor = tk.Button( groupCell, text='E', command=edit )
+        editor = ttk.Button( groupCell, text='E', command=edit )
         editor.grid( row=1, column=1, sticky=tk.NSEW )
         return groupCell
     
@@ -124,10 +127,10 @@ class MainWindow( tk.Tk ):
         self.grid_rowconfigure( 0, weight=1 )
         self.grid_columnconfigure( 0, weight=1 )
 
-        controlFrame = tk.Frame( self )
+        controlFrame = ttk.Frame( self )
         controlFrame.grid( row=0, column=1, sticky=tk.NSEW )
 
-        importLedgerButton = tk.Button( controlFrame, text="Import Ledger", command=importLedgerCb( self, self.ledger, self.format, 20 ) )
+        importLedgerButton = ttk.Button( controlFrame, text="Import Ledger", command=importLedgerCb( self, self.ledger, self.format, 20 ) )
         importLedgerButton.pack( side=tk.TOP, fill=tk.X )
 
         groupScroll = Scrollable( controlFrame, vertical=True )
@@ -138,7 +141,7 @@ class MainWindow( tk.Tk ):
         self.plotTypeVar = tk.StringVar()
         self.plotTypeVar.set( typesExclusive[ 0 ] )
         self.plotTypeVar.trace( "w", self.setPlotType )
-        self.plotTypeMenu = tk.OptionMenu( controlFrame, self.plotTypeVar, *typesExclusive )
+        self.plotTypeMenu = ttk.OptionMenu( controlFrame, self.plotTypeVar, *typesExclusive )
         self.plotTypeMenu.pack( side=tk.BOTTOM, fill=tk.X )
 
         exclusiveVar = tk.IntVar()
@@ -148,7 +151,7 @@ class MainWindow( tk.Tk ):
             setMenuOptions( self.plotTypeMenu, self.plotTypeVar, typesExclusive if self.exclusive else typesInclusive )
             self.redraw()
 
-        exclusiveToggle = tk.Checkbutton( controlFrame, variable=exclusiveVar, text="Exclusive", command=exclusiveCb )
+        exclusiveToggle = ttk.Checkbutton( controlFrame, variable=exclusiveVar, text="Exclusive", command=exclusiveCb )
         exclusiveToggle.pack( side=tk.BOTTOM, fill=tk.X )
 
 # make the window

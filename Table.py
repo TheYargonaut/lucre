@@ -1,10 +1,11 @@
-import tkinter as tk
 from tkinter import font as tkFont
+from tkinter import ttk
+import tkinter as tk
 
 class SizeEntry( tk.Entry ):
     def __init__( self, parent, textvariable, *args, **kwargs ):
         self.var = textvariable
-        self.superFrame = tk.Frame( parent )
+        self.superFrame = ttk.Frame( parent )
         tk.Entry.__init__( self, self.superFrame, textvariable=textvariable, *args, **kwargs )
         tk.Entry.pack( self, fill=tk.BOTH, expand=True )
         self.superFrame.pack_propagate( False )
@@ -23,9 +24,9 @@ class SizeEntry( tk.Entry ):
     def grid( self, *args, **kwargs ):
         self.superFrame.grid( *args, **kwargs )
 
-class Table( tk.Frame ):
+class Table( ttk.Frame ):
     def __init__( self, parent, shape=0, **kwargs ):
-        tk.Frame.__init__( self, parent, **kwargs )
+        ttk.Frame.__init__( self, parent, **kwargs )
 
         if isinstance( shape, int ):
             shape = shape, shape
@@ -81,10 +82,6 @@ class DfTable( Table ):
         var.set( str( self.df.iloc[ row, column ] ) )
         def cb( *args, row=row, column=column, var=var ):
             self.df.iloc[ row, column ] = var.get()
-            # font = tkFont.Font( font=self.cells[ row ][ column ][ 'font' ] )
-            # w = font.measure( var.get() )
-            # print( w )
-            # self.cells[ row ][ column ].config( width=font.measure( var.get() ) )
         var.trace( 'w', cb )
         return SizeEntry( self, textvariable=var, exportselection=0, **kwargs )
     

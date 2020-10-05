@@ -1,21 +1,22 @@
 import tkinter as tk
+from tkinter import ttk
 
-class Scrollable( tk.Frame ):
+class Scrollable( ttk.Frame ):
     '''wrap a frame for scrolling'''
     def __init__( self, parent, horizontal=False, vertical=False, **kwargs ):
-        self.superFrame = tk.Frame( parent, **kwargs )
+        self.superFrame = ttk.Frame( parent, **kwargs )
         self.superFrame.grid_rowconfigure( 0, weight=1 )
         self.superFrame.grid_columnconfigure( 0, weight=1 )
         self.canvas = tk.Canvas( self.superFrame )
 
-        tk.Frame.__init__( self, self.canvas )
+        ttk.Frame.__init__( self, self.canvas )
         self.bind( '<Configure>', self.confPropagate )
         self.canvas.create_window( ( 0, 0 ), window=self, anchor='nw' )
 
         confArgs = {}
         self.horizontal = horizontal
         if horizontal:
-            self.hScrollBar = tk.Scrollbar(
+            self.hScrollBar = ttk.Scrollbar(
                 self.superFrame, orient='horizontal',
                 command=self.canvas.xview )
             self.hScrollBar.grid( row=1, column=0, sticky=tk.E+tk.W )
@@ -23,15 +24,15 @@ class Scrollable( tk.Frame ):
         
         self.vertical = vertical
         if vertical:
-            self.vScrollBar = tk.Scrollbar(
+            self.vScrollBar = ttk.Scrollbar(
                 self.superFrame, orient='vertical',
                 command=self.canvas.yview )
-            self.vScrollBar.grid( row=0, column=1, sticky=tk.N+tk.S )
+            self.vScrollBar.grid( row=0, column=1, sticky=tk.NS )
             confArgs[ 'yscrollcommand' ] = self.vScrollBar.set
         
         if confArgs:
             self.canvas.configure( **confArgs )
-        self.canvas.grid( row=0, column=0, sticky=tk.N+tk.S+tk.E+tk.W )
+        self.canvas.grid( row=0, column=0, sticky=tk.NSEW )
     
     def confPropagate( self, _ ):
         sizeArgs = dict( scrollregion=self.canvas.bbox( 'all' ) )

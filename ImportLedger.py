@@ -1,9 +1,9 @@
-# dialog window to import ledger
-import tkinter as tk
-import pandas as pd
+from Ledger import internalFmt
 from Scrollable import Scrollable
 from Table import DfTable, Table
-from Ledger import internalFmt
+from tkinter import ttk
+import pandas as pd
+import tkinter as tk
 
 defaultColumn = 'ignore'
 
@@ -22,7 +22,7 @@ class HeadingFmtTable( DfTable ):
         self.headVar.append( var )
         def cb( value, pos=column ):
             self.headingCb( value, pos )
-        return tk.OptionMenu( self, var, defaultColumn, *internalFmt, command=cb )
+        return ttk.OptionMenu( self, var, defaultColumn, *internalFmt, command=cb )
     
     def makeCell( self, row, column, **kwargs ):
         if not row:
@@ -57,11 +57,11 @@ class ImportLedgerWindow( tk.Toplevel ):
             self.confirm.configure( state=tk.DISABLED )
 
     def build( self ):
-        button = tk.Frame( self )
+        button = ttk.Frame( self )
         button.pack( side=tk.BOTTOM, fill=tk.X )
-        cancel = tk.Button( button, text="Cancel", command=self.destroy )
+        cancel = ttk.Button( button, text="Cancel", command=self.destroy )
         cancel.pack( side=tk.RIGHT )
-        self.confirm = tk.Button( button, text="Confirm", command=self.finalize, state=tk.DISABLED )
+        self.confirm = ttk.Button( button, text="Confirm", command=self.finalize, state=tk.DISABLED )
         self.confirm.pack( side=tk.RIGHT )
 
         scroll = Scrollable( self, horizontal=True, vertical=True )

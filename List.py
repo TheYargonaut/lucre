@@ -1,15 +1,15 @@
 import tkinter as tk
+from tkinter import ttk
 
-class ListView( tk.Frame ):
+class ListView( ttk.Frame ):
     def __init__( self, parent, back=[], addButton=None, cb=lambda idx:None, **kwargs ):
         'pass a string as addButton to make button and label with that string'
-        tk.Frame.__init__( self, parent, **kwargs)
+        ttk.Frame.__init__( self, parent, **kwargs)
         self.columnconfigure( 0, weight=1 )
         self.back = back
         self.addButton = addButton
         if not addButton is None:
-            self.addButton = tk.Button( self, text=str( addButton ), command=self.appendCell )
-            # can I use pack to make button movement automatic?
+            self.addButton = ttk.Button( self, text=str( addButton ), command=self.appendCell )
             self.addButton.pack( side=tk.BOTTOM, fill=tk.X, expand=True )
         self.cb = cb
         if isinstance( back, dict ):
@@ -32,7 +32,7 @@ class ListView( tk.Frame ):
         def cb( *args, label=label, var=var ):
             self.cb( label, var.get() )
         var.trace( 'w', cb )
-        return tk.Entry( self, textvariable=var, **kwargs )
+        return ttk.Entry( self, textvariable=var, **kwargs )
 
     def placeCell( self, cell, label ):
         cell.pack( side=tk.TOP, fill=tk.X, expand=True )
