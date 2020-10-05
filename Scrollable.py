@@ -35,9 +35,9 @@ class Scrollable( tk.Frame ):
     
     def confPropagate( self, _ ):
         sizeArgs = dict( scrollregion=self.canvas.bbox( 'all' ) )
-        if not self.horizontal or self.winfo_width() < self.canvas.winfo_width():
+        if True or not self.horizontal or self.winfo_width() < self.canvas.winfo_width():
             sizeArgs[ 'width' ] = self.winfo_width()
-        if not self.vertical or self.winfo_height() < self.canvas.winfo_height():
+        if True or not self.vertical or self.winfo_height() < self.canvas.winfo_height():
             sizeArgs[ 'height' ] = self.winfo_height()
         self.canvas.configure( **sizeArgs )
 

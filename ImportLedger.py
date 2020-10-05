@@ -11,6 +11,7 @@ class HeadingFmtTable( DfTable ):
     def __init__( self, parent, df, headingCb, **kwargs ):
         self.df = df.applymap( str )
         self.headingCb = headingCb
+        self.headVar = []
         shape = list( df.shape )
         shape[ 0 ] += 1
         Table.__init__( self, parent, shape=shape, **kwargs )
@@ -18,6 +19,7 @@ class HeadingFmtTable( DfTable ):
     def makeHeader( self, column, **kwargs ):
         var = tk.StringVar( self )
         var.set( defaultColumn )
+        self.headVar.append( var )
         def cb( value, pos=column ):
             self.headingCb( value, pos )
         return tk.OptionMenu( self, var, defaultColumn, *internalFmt, command=cb )
@@ -43,6 +45,10 @@ class ImportLedgerWindow( tk.Toplevel ):
         self.destroy()
     
     def updateFmt( self, value, pos ):
+        if value in internalFmt:
+            for f, h in zip( self.headerFmt, self.table.headVar ):
+                if f == value:
+                    h.set( 'ignore' )
         self.headerFmt[ pos ] = value
         if all( self.headerFmt.count( name ) == 1 for name in internalFmt ):
             self.confirm.configure( state=tk.NORMAL )
@@ -59,8 +65,8 @@ class ImportLedgerWindow( tk.Toplevel ):
 
         scroll = Scrollable( self, horizontal=True, vertical=True )
         scroll.pack( side=tk.TOP, fill=tk.BOTH, expand=True )
-        table = HeadingFmtTable( scroll, self.df, self.updateFmt )
-        table.pack( side=tk.TOP, fill=tk.BOTH, expand=True )
+        self.table = HeadingFmtTable( scroll, self.df, self.updateFmt )
+        self.table.pack( side=tk.TOP, fill=tk.BOTH, expand=True )
 
 def importLedgerCb( master, ledger, format ):
     def cb( master=master, ledger=ledger, format=format ):

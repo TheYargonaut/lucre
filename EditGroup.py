@@ -41,11 +41,7 @@ class EditGroupWindow( tk.Toplevel ):
         self.titleWidget.config( text=self.group.title )
         self.ledger.updateCb( self.ledger.df )
         self.destroy()
-    
-    def destroy( self, *args, **kwargs ):
-        # may need "confirm" and "cancel" to mirror ImportLedger instead of making it a continuous-feedback
-        tk.Toplevel.destroy( self, *args, **kwargs )
-    
+        
     def whiteListCb( self, idx, txt ):
         self.group.whitelist[ idx ] = txt
         self.matchListCb()

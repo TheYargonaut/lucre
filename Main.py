@@ -110,7 +110,7 @@ class MainWindow( tk.Tk ):
         self.chartWidget.get_tk_widget().grid( row=0, column=0, sticky=tk.NSEW )
     
     def editGroup( self, idx, activator ):
-        editGroup( self, self.group.groups[ idx ], self.ledger, 20, activator )()
+        editGroupCb( self, self.group.groups[ idx ], self.ledger, 20, activator )()
         
     def setPlotType( self, *args ):
         self.plotType = choiceToFunc[ self.plotTypeVar.get() ]

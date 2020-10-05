@@ -1,4 +1,27 @@
 import tkinter as tk
+from tkinter import font as tkFont
+
+class SizeEntry( tk.Entry ):
+    def __init__( self, parent, textvariable, *args, **kwargs ):
+        self.var = textvariable
+        self.superFrame = tk.Frame( parent )
+        tk.Entry.__init__( self, self.superFrame, textvariable=textvariable, *args, **kwargs )
+        tk.Entry.pack( self, fill=tk.BOTH, expand=True )
+        self.superFrame.pack_propagate( False )
+        self.var.trace( "w", self.updateSize )
+        self.updateSize()
+    
+    def updateSize( self ):
+        font = tkFont.Font( font=self[ 'font' ] )
+        width = font.measure( self.var.get() ) + 10
+        height = font[ 'size' ] * 2
+        self.superFrame.config( width=width, height=height )
+    
+    def pack( self, *args, **kwargs ):
+        self.superFrame.pack( *args, **kwargs )
+    
+    def grid( self, *args, **kwargs ):
+        self.superFrame.grid( *args, **kwargs )
 
 class Table( tk.Frame ):
     def __init__( self, parent, shape=0, **kwargs ):
@@ -58,8 +81,12 @@ class DfTable( Table ):
         var.set( str( self.df.iloc[ row, column ] ) )
         def cb( *args, row=row, column=column, var=var ):
             self.df.iloc[ row, column ] = var.get()
+            # font = tkFont.Font( font=self.cells[ row ][ column ][ 'font' ] )
+            # w = font.measure( var.get() )
+            # print( w )
+            # self.cells[ row ][ column ].config( width=font.measure( var.get() ) )
         var.trace( 'w', cb )
-        return Table.makeCell( self, row, column, textvariable=var, **kwargs )
+        return SizeEntry( self, textvariable=var, exportselection=0, **kwargs )
     
     #def appendRow( self )
     #def appendColumn( self )

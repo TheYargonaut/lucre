@@ -4,6 +4,7 @@ class ListView( tk.Frame ):
     def __init__( self, parent, back=[], addButton=None, cb=lambda idx:None, **kwargs ):
         'pass a string as addButton to make button and label with that string'
         tk.Frame.__init__( self, parent, **kwargs)
+        self.columnconfigure( 0, weight=1 )
         self.back = back
         self.addButton = addButton
         if not addButton is None:
@@ -15,7 +16,6 @@ class ListView( tk.Frame ):
             self.cells = [ self.initCell( k ) for k in self.back.keys() ]
         else:
             self.cells = [ self.initCell( i ) for i, _ in enumerate( self.back )  ]
-
     
     def appendCell( self ):
         self.back.append( '' )
