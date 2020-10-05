@@ -127,7 +127,7 @@ class MainWindow( tk.Tk ):
         controlFrame = tk.Frame( self )
         controlFrame.grid( row=0, column=1, sticky=tk.NSEW )
 
-        importLedgerButton = tk.Button( controlFrame, text="Import Ledger", command=importLedgerCb( self, self.ledger, self.format ) )
+        importLedgerButton = tk.Button( controlFrame, text="Import Ledger", command=importLedgerCb( self, self.ledger, self.format, 20 ) )
         importLedgerButton.pack( side=tk.TOP, fill=tk.X )
 
         groupScroll = Scrollable( controlFrame, vertical=True )

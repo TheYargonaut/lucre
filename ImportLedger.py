@@ -30,9 +30,10 @@ class HeadingFmtTable( DfTable ):
         return DfTable.makeCell( self, row - 1, column, **kwargs )
 
 class ImportLedgerWindow( tk.Toplevel ):
-    def __init__( self, master, ledger, format, df, *args, **kwargs ):
+    def __init__( self, master, ledger, format, df, psize, *args, **kwargs ):
         tk.Toplevel.__init__( self, master, *args, **kwargs )
         self.ledger = ledger
+        self.psize = psize
         self.df = df
         self.headerFmt = [ defaultColumn ] * df.shape[ 1 ]
         self.build()
@@ -65,15 +66,15 @@ class ImportLedgerWindow( tk.Toplevel ):
 
         scroll = Scrollable( self, horizontal=True, vertical=True )
         scroll.pack( side=tk.TOP, fill=tk.BOTH, expand=True )
-        self.table = HeadingFmtTable( scroll, self.df, self.updateFmt )
+        self.table = HeadingFmtTable( scroll, self.df.head( self.psize ), self.updateFmt )
         self.table.pack( side=tk.TOP, fill=tk.BOTH, expand=True )
 
-def importLedgerCb( master, ledger, format ):
-    def cb( master=master, ledger=ledger, format=format ):
+def importLedgerCb( master, ledger, format, psize ):
+    def cb( master=master, ledger=ledger, format=format, psize=psize ):
         f = tk.filedialog.askopenfilename()
         if not f:
             return
         df = pd.read_csv( f, index_col=None, header=None )
-        window = ImportLedgerWindow( master, ledger, format, df )
+        window = ImportLedgerWindow( master, ledger, format, df, psize )
         master.wait_window( window )
     return cb
