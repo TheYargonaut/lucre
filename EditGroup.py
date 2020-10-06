@@ -6,6 +6,8 @@ from List import ListView
 from Group import Group
 # window for editing a group
 
+prevLens = [ 10, 25, 100 ]
+
 class EditGroupWindow( tk.Toplevel ):
     def __init__( self, master, group, ledger, psize, titleWidget, *args, **kwargs ):
         tk.Toplevel.__init__( self, master, *args, **kwargs )
@@ -17,6 +19,7 @@ class EditGroupWindow( tk.Toplevel ):
         self.titleWidget = titleWidget
         self.highlight = "white"
         self.ignored = "#E00E00E00" # gray
+        self.table = None
         self.build()
         self.matchListCb()
     
@@ -25,7 +28,7 @@ class EditGroupWindow( tk.Toplevel ):
         mask = self.group.filter( self.ledger.df )
         if self.lastMask is None:
             self.lastMask = ~mask
-        for r, m, l in zip( self.preview.cells, mask, self.lastMask ):
+        for r, m, l in zip( self.table.cells, mask, self.lastMask ):
             if m and not l:
                 for c in r:
                     c.config( background=self.highlight ) # highlight row
@@ -37,7 +40,7 @@ class EditGroupWindow( tk.Toplevel ):
     def finalize( self ):
         self.groupBack.whitelist = self.group.whitelist
         self.groupBack.blacklist = self.group.blacklist
-        self.groupBack.negate = self.groupBack.negate
+        self.groupBack.negate = self.group.negate
         self.groupBack.title = self.group.title
         self.titleWidget.config( text=self.group.title )
         self.ledger.updateCb( self.ledger.df )
@@ -56,6 +59,13 @@ class EditGroupWindow( tk.Toplevel ):
     
     def expenseCb( self, value ):
         self.group.negate = value == 'expense'
+    
+    def resizePreview( self, size ):
+        if self.table is not None:
+            self.table.destroy()
+            self.table = None
+        self.table = DfTable( self.scroll, self.ledger.df.head( int( size ) ) )
+        self.table.pack( side=tk.TOP, fill=tk.BOTH, expand=True )
 
     def build( self ):
         self.grid_rowconfigure( 0, weight=1 )
@@ -89,6 +99,8 @@ class EditGroupWindow( tk.Toplevel ):
         cancel.pack( side=tk.RIGHT )
         confirm = ttk.Button( button, text="Confirm", command=self.finalize )
         confirm.pack( side=tk.RIGHT )
+        prevLenMenu = ttk.OptionMenu( button, tk.StringVar( button ), str( self.psize ), *( [ str( p ) for p in prevLens if p < self.ledger.df.shape[ 0 ] ] + [ self.ledger.df.shape[ 0 ] ] ), command=self.resizePreview )
+        prevLenMenu.pack( side=tk.LEFT )
 
         nameFrame = ttk.Frame( mainFrame )
         nameFrame.grid( row=0, column=0, sticky=tk.NSEW )
@@ -97,15 +109,12 @@ class EditGroupWindow( tk.Toplevel ):
         self.nameVar.trace( 'w', self.nameCb )
         name = ttk.Entry( nameFrame, textvariable=self.nameVar, exportselection=0 )
         name.pack( side=tk.LEFT, fill=tk.X, expand=True )
-        styleVar = tk.StringVar( nameFrame )
-        styleVar.set( "expense" if self.group.negate else "income" )
-        style = ttk.OptionMenu( nameFrame, styleVar, "income", "expense", command=self.expenseCb )
+        style = ttk.OptionMenu( nameFrame, tk.StringVar( nameFrame ), ( "expense" if self.group.negate else "income" ), "income", "expense", command=self.expenseCb )
         style.pack( side=tk.RIGHT, fill=tk.NONE, expand=False )
 
-        scroll = Scrollable( mainFrame, True, True )
-        self.preview = DfTable( scroll, self.ledger.df.head( self.psize ) )
-        self.preview.pack( fill=tk.BOTH, expand=True )
-        scroll.grid( row=1, column=0, sticky=tk.NE + tk.S )
+        self.scroll = Scrollable( mainFrame, True, True )
+        self.scroll.grid( row=1, column=0, sticky=tk.NE + tk.S )
+        self.resizePreview( self.psize )
 
 def editGroupCb( master, group, ledger, psize, titleWidget ):
     def cb( master=master, group=group, ledger=ledger, psize=psize, titleWidget=titleWidget ):

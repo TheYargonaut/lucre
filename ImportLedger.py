@@ -6,23 +6,20 @@ import pandas as pd
 import tkinter as tk
 
 defaultColumn = 'ignore'
+prevLens = [ 10, 25, 100 ]
 
 class HeadingFmtTable( DfTable ):
     def __init__( self, parent, df, headingCb, **kwargs ):
         self.df = df.applymap( str )
         self.headingCb = headingCb
-        self.headVar = []
         shape = list( df.shape )
         shape[ 0 ] += 1
         Table.__init__( self, parent, shape=shape, **kwargs )
     
     def makeHeader( self, column, **kwargs ):
-        var = tk.StringVar( self )
-        var.set( defaultColumn )
-        self.headVar.append( var )
         def cb( value, pos=column ):
             self.headingCb( value, pos )
-        return ttk.OptionMenu( self, var, defaultColumn, *internalFmt, command=cb )
+        return ttk.OptionMenu( self, tk.StringVar( self ), defaultColumn, defaultColumn, *internalFmt, command=cb )
     
     def makeCell( self, row, column, **kwargs ):
         if not row:
@@ -33,8 +30,9 @@ class ImportLedgerWindow( tk.Toplevel ):
     def __init__( self, master, ledger, format, df, psize, *args, **kwargs ):
         tk.Toplevel.__init__( self, master, *args, **kwargs )
         self.ledger = ledger
-        self.psize = psize
         self.df = df
+        self.psize = psize
+        self.table = None
         self.headerFmt = [ defaultColumn ] * df.shape[ 1 ]
         self.build()
     
@@ -55,6 +53,13 @@ class ImportLedgerWindow( tk.Toplevel ):
             self.confirm.configure( state=tk.NORMAL )
         else:
             self.confirm.configure( state=tk.DISABLED )
+    
+    def resizePreview( self, size ):
+        if self.table is not None:
+            self.table.destroy()
+            self.table = None
+        self.table = HeadingFmtTable( self.scroll, self.df.head( int( size ) ), self.updateFmt )
+        self.table.pack( side=tk.TOP, fill=tk.BOTH, expand=True )
 
     def build( self ):
         button = ttk.Frame( self )
@@ -63,11 +68,12 @@ class ImportLedgerWindow( tk.Toplevel ):
         cancel.pack( side=tk.RIGHT )
         self.confirm = ttk.Button( button, text="Confirm", command=self.finalize, state=tk.DISABLED )
         self.confirm.pack( side=tk.RIGHT )
+        prevLenMenu = ttk.OptionMenu( button, tk.StringVar( button ), str( self.psize ), *( [ str( p ) for p in prevLens if p < self.df.shape[ 0 ] ] + [ self.df.shape[ 0 ] ] ), command=self.resizePreview )
+        prevLenMenu.pack( side=tk.LEFT )
 
-        scroll = Scrollable( self, horizontal=True, vertical=True )
-        scroll.pack( side=tk.TOP, fill=tk.BOTH, expand=True )
-        self.table = HeadingFmtTable( scroll, self.df.head( self.psize ), self.updateFmt )
-        self.table.pack( side=tk.TOP, fill=tk.BOTH, expand=True )
+        self.scroll = Scrollable( self, horizontal=True, vertical=True )
+        self.scroll.pack( side=tk.TOP, fill=tk.BOTH, expand=True )
+        self.resizePreview( str( self.psize ) )
 
 def importLedgerCb( master, ledger, format, psize ):
     def cb( master=master, ledger=ledger, format=format, psize=psize ):
