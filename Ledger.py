@@ -23,8 +23,8 @@ import pandas as pd
 
 def preprocess( df ):
     ledger = df[ internalFmt ].copy()
-    ledger[ 'date' ] = pd.to_datetime( ledger[ 'date' ] )
-    pd.DataFrame.drop_duplicates( ledger )
+    ledger[ 'date' ] = pd.to_datetime( ledger[ 'date' ] ).dt.date
+    pd.DataFrame.drop_duplicates( ledger, inplace=True )
     ledger.sort_values( 'date', inplace=True )
     ledger.reset_index( drop=True, inplace=True )
     return ledger

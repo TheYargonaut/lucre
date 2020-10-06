@@ -16,17 +16,6 @@ import pdb
 
 pd.plotting.register_matplotlib_converters()
 
-class ToggleButton( tk.Button ):
-    def __init__( self, *args, command=lambda state:None, **kwargs):
-        def cb( *args ):
-            if self.config( 'relief' )[ -1 ] == 'sunken':
-                self.config( relief="raised" )
-                command( False )
-            else:
-                self.config( relief="sunken" )
-                command( True )
-        tk.Button.__init__( self, *args, command=cb, **kwargs )
-
 class GroupList( ListView ):
     def __init__( self, parent, back=[], addButton=None, addCb=lambda:None, activeCb=lambda idx, state:None, editCb=lambda idx, activator:None, **kwargs ):
         self.addCb = addCb

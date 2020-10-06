@@ -4,6 +4,7 @@ from Table import DfTable, Table
 from tkinter import ttk
 import pandas as pd
 import tkinter as tk
+from Tooltip import Tooltip
 
 defaultColumn = 'ignore'
 prevLens = [ 10, 25, 100 ]
@@ -12,14 +13,17 @@ class HeadingFmtTable( DfTable ):
     def __init__( self, parent, df, headingCb, **kwargs ):
         self.df = df.applymap( str )
         self.headingCb = headingCb
+        self.headVar = []
         shape = list( df.shape )
         shape[ 0 ] += 1
         Table.__init__( self, parent, shape=shape, **kwargs )
     
     def makeHeader( self, column, **kwargs ):
+        var = tk.StringVar( self )
+        self.headVar.append( var )
         def cb( value, pos=column ):
             self.headingCb( value, pos )
-        return ttk.OptionMenu( self, tk.StringVar( self ), defaultColumn, defaultColumn, *internalFmt, command=cb )
+        return ttk.OptionMenu( self, var, defaultColumn, defaultColumn, *internalFmt, command=cb )
     
     def makeCell( self, row, column, **kwargs ):
         if not row:
@@ -50,9 +54,14 @@ class ImportLedgerWindow( tk.Toplevel ):
                     h.set( 'ignore' )
         self.headerFmt[ pos ] = value
         if all( self.headerFmt.count( name ) == 1 for name in internalFmt ):
-            self.confirm.configure( state=tk.NORMAL )
+            if self.tooltip:
+                self.confirm.configure( state=tk.NORMAL )
+                self.tooltip.destroy()
+                self.tooltip = None
         else:
-            self.confirm.configure( state=tk.DISABLED )
+            if self.tooltip is None:
+                self.tooltip = Tooltip( self.confirm, "label columns to import" )
+                self.confirm.configure( state=tk.DISABLED )
     
     def resizePreview( self, size ):
         if self.table is not None:
@@ -68,6 +77,7 @@ class ImportLedgerWindow( tk.Toplevel ):
         cancel.pack( side=tk.RIGHT )
         self.confirm = ttk.Button( button, text="Confirm", command=self.finalize, state=tk.DISABLED )
         self.confirm.pack( side=tk.RIGHT )
+        self.tooltip = Tooltip( self.confirm, "label columns to import" )
         prevLenMenu = ttk.OptionMenu( button, tk.StringVar( button ), str( self.psize ), *( [ str( p ) for p in prevLens if p < self.df.shape[ 0 ] ] + [ self.df.shape[ 0 ] ] ), command=self.resizePreview )
         prevLenMenu.pack( side=tk.LEFT )
 
