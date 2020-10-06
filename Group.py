@@ -79,21 +79,21 @@ class Partition( object ):
             if edges:
                 r[ g.title ] = pd.concat( [ early, df[ f ], late ] ).reset_index( drop=True )
             else:
-                r[ g.title ] = df[ f ]
+                r[ g.title ] = df[ f ].copy()
             if g.negate:
-                r[ g.title ][ 'delta' ] = -r[ g.title ][ 'delta' ]
+                r[ g.title ].loc[ :, 'delta' ] = -r[ g.title ][ 'delta' ]
             df = df[ ~f ]
         if edges:
             r[ 'other' ] = pd.concat( [ early, df, late ] ).reset_index( drop=True )
         else:
             r[ 'other' ] = df
         if self.negate:
-            r[ 'other' ][ 'delta' ] = -r[ 'other' ][ 'delta' ]
+            r[ 'other' ].loc[ :, 'delta' ] = -r[ 'other' ][ 'delta' ]
         return r
     
     def plotDelta( self, df, ax ):
         for title, data in self.filter( df, False ).items():
-            data[ title ] = data[ 'delta' ]
+            data.loc[ :, title ] = data[ 'delta' ]
             if not data.empty:
                 data.plot( x='date', y=title, ax=ax )
 

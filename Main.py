@@ -115,8 +115,8 @@ class MainWindow( tk.Tk ):
     def editGroup( self, idx, activator ):
         editGroupCb( self, self.group.groups[ idx ], self.ledger, 20, activator )()
         
-    def setPlotType( self, choice ):
-        self.plotType = choiceToFunc[ choice ]
+    def setPlotType( self, *args ):
+        self.plotType = choiceToFunc[ self.plotTypeVar.get() ]
         self.redraw()
     
     def activateGroup( self, label, state ):
@@ -138,7 +138,9 @@ class MainWindow( tk.Tk ):
         groupList = GroupList( groupScroll, self.group.groups, "New Group", self.group.create, self.activateGroup, self.editGroup )
         groupList.pack()
         
-        self.plotTypeMenu = ttk.OptionMenu( controlFrame, tk.StringVar( controlFrame ), typesExclusive[ 0 ], *typesExclusive, command=self.setPlotType )
+        self.plotTypeVar = tk.StringVar()
+        self.plotTypeVar.trace( 'w', self.setPlotType )
+        self.plotTypeMenu = ttk.OptionMenu( controlFrame, self.plotTypeVar, typesExclusive[ 0 ], *typesExclusive )
         self.plotTypeMenu.pack( side=tk.BOTTOM, fill=tk.X )
 
         exclusiveVar = tk.IntVar()

@@ -94,7 +94,7 @@ class EditGroupWindow( tk.Toplevel ):
         blackList.pack()
 
         button = ttk.Frame( self )
-        button.grid( row=1, column=0, columnspan=2, sticky=tk.E )
+        button.grid( row=1, column=0, columnspan=2, sticky=tk.W + tk.E )
         cancel = ttk.Button( button, text="Cancel", command=self.destroy )
         cancel.pack( side=tk.RIGHT )
         confirm = ttk.Button( button, text="Confirm", command=self.finalize )
