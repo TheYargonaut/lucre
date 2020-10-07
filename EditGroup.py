@@ -29,12 +29,14 @@ class EditGroupWindow( tk.Toplevel ):
         if self.lastMask is None:
             self.lastMask = ~mask
         for r, m, l in zip( self.table.cells, mask, self.lastMask ):
-            if m and not l:
-                for c in r:
-                    c.config( background=self.highlight ) # highlight row
-            if l and not m:
-                for c in r:
-                    c.config( background=self.ignored ) # unhighlight row
+            for c in r:
+                c.config( background=self.highlight if m else self.ignored )
+            # if m and not l:
+            #     for c in r:
+            #         c.config( background=self.highlight ) # highlight row
+            # if l and not m:
+            #     for c in r:
+            #         c.config( background=self.ignored ) # unhighlight row
         self.lastMask = mask
     
     def finalize( self ):
@@ -66,6 +68,7 @@ class EditGroupWindow( tk.Toplevel ):
             self.table = None
         self.table = DfTable( self.scroll, self.ledger.df.head( int( size ) ) )
         self.table.pack( side=tk.TOP, fill=tk.BOTH, expand=True )
+        self.matchListCb()
 
     def build( self ):
         self.grid_rowconfigure( 0, weight=1 )

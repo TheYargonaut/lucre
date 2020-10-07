@@ -135,7 +135,7 @@ class GroupMan( object ):
     def create( self ):
         i = self.uids
         self.uids += 1
-        self.groups[ i ] = Group( "Untitled" )
+        self.groups[ i ] = Group( "Untitled", [], [], False )
         return i
     
     def setActive( self, key, state ):

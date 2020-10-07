@@ -89,7 +89,9 @@ class MainWindow( tk.Tk ):
             return
         self.ax = self.fig.add_subplot( 111 )
         if self.exclusive:
-            part = Partition( groups=[ self.group.groups[ a ] for a in active ] )
+            groups = [ self.group.groups[ a ] for a in active ]
+            blacklist = sum( ( g.whitelist for k, g in self.group.groups.items() if k not in active ), start=[] )
+            part = Partition( groups=groups, blacklist=blacklist )
             getattr( part, self.plotType )( df, self.ax )
         else:
             for a in active:
