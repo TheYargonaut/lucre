@@ -8,7 +8,8 @@ from Format import internalFmt
 def matchAny( regexList, df, column='memo' ):
     return reduce( lambda x,y: x | y,
                    ( df[ column ].str.contains( r ) 
-                     for r in regexList ) )
+                     for r in regexList if r ),
+                   False )
 
 class Group( object ):
     def __init__( self, title="", whitelist=[], blacklist=[], negate=False ):
@@ -34,20 +35,20 @@ class Group( object ):
             f &= self.applyBlacklist( df )
         return f
     
-    def plotDelta( self, df, ax ):
+    def plotAmount( self, df, ax ):
         df = df[ self.filter( df ) ].copy()
         if self.negate:
-            df[ self.title ] = -df[ 'delta' ]
+            df[ self.title ] = -df[ 'amount' ]
         else:
-            df[ self.title ] = df[ 'delta' ]
+            df[ self.title ] = df[ 'amount' ]
         df.plot( x='date', y=self.title, ax=ax )
     
     def plotCumulative( self, df, ax ):
         df = df[ self.filter( df ) ].copy()
         if self.negate:
-            df[ self.title ] = -df[ 'delta' ].cumsum()
+            df[ self.title ] = -df[ 'amount' ].cumsum()
         else:
-            df[ self.title ] = df[ 'delta' ].cumsum()
+            df[ self.title ] = df[ 'amount' ].cumsum()
         df.plot( x='date', y=self.title, ax=ax, drawstyle="steps-post" )
 
     def keys( self ):
@@ -68,10 +69,10 @@ class Partition( object ):
         if self.blacklist:
             df = df[ ~matchAny( self.blacklist, df ) ]
         early = pd.DataFrame( dict( date=df[ 'date' ].min(),
-                                    delta=0,
+                                    amount=0,
                                     memo='' ), index=[ 0 ] )
         late = pd.DataFrame( dict( date=df[ 'date' ].max(),
-                                   delta=0,
+                                   amount=0,
                                    memo='' ), index=[ 0 ] )
         r = {}
         for g in self.groups:
@@ -81,25 +82,25 @@ class Partition( object ):
             else:
                 r[ g.title ] = df[ f ].copy()
             if g.negate:
-                r[ g.title ].loc[ :, 'delta' ] = -r[ g.title ][ 'delta' ]
+                r[ g.title ].loc[ :, 'amount' ] = -r[ g.title ][ 'amount' ]
             df = df[ ~f ]
         if edges:
             r[ 'other' ] = pd.concat( [ early, df, late ] ).reset_index( drop=True )
         else:
             r[ 'other' ] = df
         if self.negate:
-            r[ 'other' ].loc[ :, 'delta' ] = -r[ 'other' ][ 'delta' ]
+            r[ 'other' ].loc[ :, 'amount' ] = -r[ 'other' ][ 'amount' ]
         return r
     
-    def plotDelta( self, df, ax ):
+    def plotAmount( self, df, ax ):
         for title, data in self.filter( df, False ).items():
-            data.loc[ :, title ] = data[ 'delta' ]
+            data.loc[ :, title ] = data[ 'amount' ]
             if not data.empty:
                 data.plot( x='date', y=title, ax=ax )
 
     def plotCumulative( self, df, ax ):
         for title, data in self.filter( df ).items():
-            data[ title ] = data[ 'delta' ].cumsum()
+            data[ title ] = data[ 'amount' ].cumsum()
             if not data.empty:
                 data.plot( x='date', y=title, ax=ax, drawstyle='steps-post' )
 
@@ -108,7 +109,7 @@ class Partition( object ):
             stack = layer
         else:
             stack = pd.concat( [ stack, layer ] ).sort_values( 'date' ).reset_index( drop=True )
-        stack[ title ] = stack[ 'delta' ].cumsum()
+        stack[ title ] = stack[ 'amount' ].cumsum()
         stack.plot( x='date', y=title, ax=ax, drawstyle='steps-post' )
         return stack[ internalFmt ]
 
@@ -120,7 +121,7 @@ class Partition( object ):
         self.plotLayer( stack, data[ 'other' ], 'other', ax )
     
     def plotPie( self, df, ax ):
-        total = { title: abs( data[ 'delta' ].sum() ) for title, data in self.filter( df ).items() }
+        total = { title: abs( data[ 'amount' ].sum() ) for title, data in self.filter( df ).items() }
         pd.Series( total ).sort_values().plot.pie( ax=ax, ylabel="", normalize=True )
 
 defaultFile = os.path.join( '.', 'userdata', 'groups.yaml' )

@@ -1,6 +1,5 @@
 import tkinter as tk
 
-
 class Tooltip( object ):
     '''
     create a tooltip for a given widget
@@ -26,8 +25,7 @@ class Tooltip( object ):
         self.tw.wm_overrideredirect( True )
         self.tw.wm_geometry( "+%d+%d" % ( x, y ) )
         label = tk.Label( self.tw, text=self.text, justify='left',
-                          background='yellow', relief='solid', borderwidth=1,
-                          font=( "times", "8", "normal" ) )
+                          background='yellow', relief='solid', borderwidth=1 )
         label.pack( ipadx=1 )
 
     def close( self, event=None ):

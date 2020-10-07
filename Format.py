@@ -1,6 +1,6 @@
 import os, yaml
 
-internalFmt = [ 'date', 'delta', 'memo' ]
+internalFmt = [ 'date', 'amount', 'memo' ]
 defaultFile = os.path.join( '.', 'userdata', 'formats.yaml' )
 
 class FormatMan( object ):

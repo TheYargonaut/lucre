@@ -38,8 +38,8 @@ class EditGroupWindow( tk.Toplevel ):
         self.lastMask = mask
     
     def finalize( self ):
-        self.groupBack.whitelist = self.group.whitelist
-        self.groupBack.blacklist = self.group.blacklist
+        self.groupBack.whitelist = [ r for r in self.group.whitelist if r ]
+        self.groupBack.blacklist = [ r for r in self.group.blacklist if r ]
         self.groupBack.negate = self.group.negate
         self.groupBack.title = self.group.title
         self.titleWidget.config( text=self.group.title )
@@ -76,20 +76,24 @@ class EditGroupWindow( tk.Toplevel ):
         mainFrame.grid_columnconfigure( 0, weight=1 )
         listFrame = ttk.Frame( self )
         listFrame.grid( row=0, column=1, sticky=tk.NSEW )
+        listFrame.grid_rowconfigure( 0, weight=1 )
         listFrame.grid_rowconfigure( 1, weight=1 )
-        listFrame.grid_rowconfigure( 3, weight=1 )
         listFrame.grid_columnconfigure( 0, weight=1 )
         
-        whiteLabel = ttk.Label( listFrame, text='whitelist' )
-        whiteLabel.grid( row=0, column=0, sticky=tk.NSEW )
-        whiteScroll = Scrollable( listFrame, vertical=True )
-        whiteScroll.grid( row=1, column=0, sticky=tk.NSEW )
+        whiteFrame = ttk.Frame( listFrame )
+        whiteFrame.grid( row=0, column=0, sticky=tk.NSEW )
+        whiteLabel = tk.Label( whiteFrame, text='whitelist' )
+        whiteLabel.pack( side=tk.TOP, fill=tk.X )
+        whiteScroll = Scrollable( whiteFrame, vertical=True )
+        whiteScroll.pack( side=tk.TOP, fill=tk.BOTH )
         whiteList = ListView( whiteScroll, self.group.whitelist, '+', self.whiteListCb )
         whiteList.pack()
-        blackLabel = ttk.Label( listFrame, text='blacklist' )
-        blackLabel.grid( row=2, column=0, sticky=tk.NSEW )
-        blackScroll = Scrollable( listFrame, vertical=True )
-        blackScroll.grid( row=3, column=0, sticky=tk.NSEW )
+        blackFrame = ttk.Frame( listFrame )
+        blackFrame.grid( row=1, column=0, sticky=tk.NSEW )
+        blackLabel = tk.Label( blackFrame, text='blacklist' )
+        blackLabel.pack( side=tk.TOP, fill=tk.X )
+        blackScroll = Scrollable( blackFrame, vertical=True )
+        blackScroll.pack( side=tk.TOP, fill=tk.BOTH )
         blackList = ListView( blackScroll, self.group.blacklist, '+', self.blackListCb )
         blackList.pack()
 
@@ -99,7 +103,7 @@ class EditGroupWindow( tk.Toplevel ):
         cancel.pack( side=tk.RIGHT )
         confirm = ttk.Button( button, text="Confirm", command=self.finalize )
         confirm.pack( side=tk.RIGHT )
-        prevLenMenu = ttk.OptionMenu( button, tk.StringVar( button ), str( self.psize ), *( [ str( p ) for p in prevLens if p < self.ledger.df.shape[ 0 ] ] + [ self.ledger.df.shape[ 0 ] ] ), command=self.resizePreview )
+        prevLenMenu = ttk.OptionMenu( button, tk.StringVar( button ), str( self.psize ), *[ str( p ) for p in prevLens if p < self.ledger.df.shape[ 0 ] ], self.ledger.df.shape[ 0 ], command=self.resizePreview )
         prevLenMenu.pack( side=tk.LEFT )
 
         nameFrame = ttk.Frame( mainFrame )

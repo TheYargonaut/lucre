@@ -47,10 +47,10 @@ class GroupList( ListView ):
     def appendCell( self ):
         self.cells.append( self.initCell( self.addCb() ) )
 
-typesInclusive = [ "delta", "cumulative" ]
+typesInclusive = [ "event", "cumulative" ]
 typesExclusive = typesInclusive + [ "stack", "pie" ]
 choiceToFunc = dict(
-    delta="plotDelta",
+    event="plotAmount",
     cumulative="plotCumulative",
     stack="plotStack",
     pie="plotPie",
@@ -66,7 +66,7 @@ def setMenuOptions( widget, var, options ):
 class MainWindow( tk.Tk ):
     def __init__( self ):
         tk.Tk.__init__( self )
-        self.plotType = "plotDelta"
+        self.plotType = "plotAmount"
         self.exclusive = True
         self.makeChart()
         self.format = FormatMan()

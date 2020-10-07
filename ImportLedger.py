@@ -20,10 +20,11 @@ class HeadingFmtTable( DfTable ):
     
     def makeHeader( self, column, **kwargs ):
         var = tk.StringVar( self )
+        def cb( *args, pos=column ):
+            self.headingCb( var.get(), pos )
+        var.trace( 'w', cb )
         self.headVar.append( var )
-        def cb( value, pos=column ):
-            self.headingCb( value, pos )
-        return ttk.OptionMenu( self, var, defaultColumn, defaultColumn, *internalFmt, command=cb )
+        return ttk.OptionMenu( self, var, defaultColumn, defaultColumn, *internalFmt )
     
     def makeCell( self, row, column, **kwargs ):
         if not row:
@@ -34,6 +35,7 @@ class ImportLedgerWindow( tk.Toplevel ):
     def __init__( self, master, ledger, format, df, psize, *args, **kwargs ):
         tk.Toplevel.__init__( self, master, *args, **kwargs )
         self.ledger = ledger
+        self.format = format
         self.df = df
         self.psize = psize
         self.table = None
@@ -45,6 +47,8 @@ class ImportLedgerWindow( tk.Toplevel ):
                 for i, name in enumerate( self.headerFmt ) ]
         self.df.columns = fmt
         self.ledger.add( self.df )
+        if self.fmtFlag.get():
+            self.format.formats[ self.fmtTitleVar.get() ] = fmt
         self.destroy()
     
     def updateFmt( self, value, pos ):
@@ -66,11 +70,40 @@ class ImportLedgerWindow( tk.Toplevel ):
     def resizePreview( self, size ):
         if self.table is not None:
             self.table.destroy()
-            self.table = None
         self.table = HeadingFmtTable( self.scroll, self.df.head( int( size ) ), self.updateFmt )
         self.table.pack( side=tk.TOP, fill=tk.BOTH, expand=True )
+    
+    def importFormatCb( self, choice ):
+        if choice == "New":
+            self.fmtSave.pack( side=tk.LEFT )
+            self.fmtTitle.pack( side=tk.LEFT, fill=tk.X, expand=True )
+            for c, hdr in zip( self.table.cells[ 0 ], self.table.headVar ):
+                hdr.set( defaultColumn )
+                c.configure( state="enabled" )
+            return
+        self.fmtSave.pack_forget()
+        self.fmtTitle.pack_forget()
+        self.fmtFlag.set( 0 )
+        for c, hdr, label in zip( self.table.cells[ 0 ], self.table.headVar, self.format.formats[ choice ] ):
+            c.configure( state="disabled" )
+            hdr.set( label if label in internalFmt else defaultColumn )
+        # set up import
 
     def build( self ):
+        forms = ttk.Frame( self )
+        forms.pack( side=tk.TOP, fill=tk.X, expand=True )
+        fmtVar = tk.StringVar( forms )
+        fmtMenu = ttk.OptionMenu( forms, fmtVar, "New", "New", *[ k for k, f in self.format.formats.items() if len( f ) == self.df.shape[ 1 ] ], command=self.importFormatCb )
+        fmtMenu.pack( side=tk.LEFT )
+        self.fmtFlag = tk.IntVar( forms )
+        self.fmtFlag.set( 0 )
+        self.fmtSave = ttk.Checkbutton( forms, variable=self.fmtFlag, text="Save Format As" )
+        self.fmtSave.pack( side=tk.LEFT )
+        self.fmtTitleVar = tk.StringVar( forms )
+        self.fmtTitleVar.set( "Untitled" )
+        self.fmtTitle = ttk.Entry( forms, textvariable=self.fmtTitleVar )
+        self.fmtTitle.pack( side=tk.LEFT, fill=tk.X, expand=True )
+
         button = ttk.Frame( self )
         button.pack( side=tk.BOTTOM, fill=tk.X )
         cancel = ttk.Button( button, text="Cancel", command=self.destroy )
@@ -78,7 +111,7 @@ class ImportLedgerWindow( tk.Toplevel ):
         self.confirm = ttk.Button( button, text="Confirm", command=self.finalize, state=tk.DISABLED )
         self.confirm.pack( side=tk.RIGHT )
         self.tooltip = Tooltip( self.confirm, "label columns to import" )
-        prevLenMenu = ttk.OptionMenu( button, tk.StringVar( button ), str( self.psize ), *( [ str( p ) for p in prevLens if p < self.df.shape[ 0 ] ] + [ self.df.shape[ 0 ] ] ), command=self.resizePreview )
+        prevLenMenu = ttk.OptionMenu( button, tk.StringVar( button ), str( self.psize ), *[ str( p ) for p in prevLens if p < self.df.shape[ 0 ] ], self.df.shape[ 0 ], command=self.resizePreview )
         prevLenMenu.pack( side=tk.LEFT )
 
         self.scroll = Scrollable( self, horizontal=True, vertical=True )
