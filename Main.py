@@ -147,6 +147,7 @@ class MainWindow( tk.Tk ):
 # make the window
 top = MainWindow()
 top.title( "lucre" )
+top.tk.call( 'wm', 'iconphoto', top._w, tk.PhotoImage( file='logo.png' ) )
 top.mainloop()
 
 # save current settings
