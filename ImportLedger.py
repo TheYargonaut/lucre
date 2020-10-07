@@ -34,6 +34,7 @@ class HeadingFmtTable( DfTable ):
 class ImportLedgerWindow( tk.Toplevel ):
     def __init__( self, master, ledger, format, df, psize, *args, **kwargs ):
         tk.Toplevel.__init__( self, master, *args, **kwargs )
+        self.title( "import ledger" )
         self.ledger = ledger
         self.format = format
         self.df = df

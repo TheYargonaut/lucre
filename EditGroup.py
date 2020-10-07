@@ -11,6 +11,7 @@ prevLens = [ 10, 25, 100 ]
 class EditGroupWindow( tk.Toplevel ):
     def __init__( self, master, group, ledger, psize, titleWidget, *args, **kwargs ):
         tk.Toplevel.__init__( self, master, *args, **kwargs )
+        self.title( "edit group" )
         self.lastMask = None
         self.groupBack = group
         self.group = Group( **dict( group ) )

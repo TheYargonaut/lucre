@@ -146,6 +146,7 @@ class MainWindow( tk.Tk ):
 
 # make the window
 top = MainWindow()
+top.title( "lucre" )
 top.mainloop()
 
 # save current settings
