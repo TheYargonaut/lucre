@@ -36,11 +36,11 @@ class GroupList( ListView ):
             self.activeCb( label, False )
             del self.back[ label ]
             groupCell.destroy()
-        remover = ttk.Button( groupCell, text='X', command=remove )
+        remover = ttk.Button( groupCell, text='Delete', command=remove )
         remover.grid( row=0, column=1, sticky=tk.NSEW )
         def edit( *args, label=label, activator=activator ):
             self.editCb( label, activator )
-        editor = ttk.Button( groupCell, text='E', command=edit )
+        editor = ttk.Button( groupCell, text='Edit', command=edit )
         editor.grid( row=1, column=1, sticky=tk.NSEW )
         return groupCell
     

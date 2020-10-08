@@ -31,7 +31,7 @@ class EditGroupWindow( tk.Toplevel ):
             self.lastMask = ~mask
         for r, m, l in zip( self.table.cells, mask, self.lastMask ):
             for c in r:
-                c.config( background=self.highlight if m else self.ignored )
+                c.config( disabledbackground=self.highlight if m else self.ignored )
             # if m and not l:
             #     for c in r:
             #         c.config( background=self.highlight ) # highlight row

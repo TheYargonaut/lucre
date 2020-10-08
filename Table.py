@@ -83,7 +83,7 @@ class DfTable( Table ):
         def cb( *args, row=row, column=column, var=var ):
             self.df.iloc[ row, column ] = var.get()
         var.trace( 'w', cb )
-        return SizeEntry( self, textvariable=var, exportselection=0, **kwargs )
+        return SizeEntry( self, textvariable=var, exportselection=0, state="disabled", disabledbackground='white', **kwargs )
     
     #def appendRow( self )
     #def appendColumn( self )
