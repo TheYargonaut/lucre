@@ -132,7 +132,8 @@ class Partition( object ):
         total = { title: abs( data[ 'amount' ].sum() ) for title, data in self.filter( df ).items() }
         series = pd.Series( total, name="" ).sort_values()
         series.plot.pie( ax=ax, autopct='%1.0f%%', labeldistance=1.1,
-                         labels=[ "%s:$%1.2f" % item for item in series.iteritems() ] )
+                         title="Total: $%1.2f" % sum( total.values() ),
+                         labels=[ "%s: $%1.2f" % item for item in series.iteritems() ] )
 
 defaultFile = os.path.join( '.', 'userdata', 'groups.yaml' )
 class GroupMan( object ):
