@@ -41,10 +41,17 @@ class Group( object ):
             df[ self.title ] = -df[ 'amount' ]
         else:
             df[ self.title ] = df[ 'amount' ]
-        df.plot( x='date', y=self.title, ax=ax )
+        df.plot( x='date', y=self.title, ax=ax, style='o' )
     
     def plotCumulative( self, df, ax ):
+        early = pd.DataFrame( dict( date=df[ 'date' ].min(),
+                                    amount=0,
+                                    memo='' ), index=[ 0 ] )
+        late = pd.DataFrame( dict( date=df[ 'date' ].max(),
+                                   amount=0,
+                                   memo='' ), index=[ 0 ] )
         df = df[ self.filter( df ) ].copy()
+        df = pd.concat( [ early, df, late ] ).reset_index( drop=True )
         if self.negate:
             df[ self.title ] = -df[ 'amount' ].cumsum()
         else:
@@ -53,6 +60,7 @@ class Group( object ):
 
     def keys( self ):
         return 'title', 'whitelist', 'blacklist', 'negate'
+
     def __getitem__( self, key ):
         return getattr( self, key )
 
@@ -96,7 +104,7 @@ class Partition( object ):
         for title, data in self.filter( df, False ).items():
             data.loc[ :, title ] = data[ 'amount' ]
             if not data.empty:
-                data.plot( x='date', y=title, ax=ax )
+                data.plot( x='date', y=title, ax=ax, style='o' )
 
     def plotCumulative( self, df, ax ):
         for title, data in self.filter( df ).items():
@@ -122,7 +130,7 @@ class Partition( object ):
     
     def plotPie( self, df, ax ):
         total = { title: abs( data[ 'amount' ].sum() ) for title, data in self.filter( df ).items() }
-        pd.Series( total ).sort_values().plot.pie( ax=ax, ylabel="", normalize=True )
+        pd.Series( total ).sort_values().plot.pie( ax=ax, autopct='%1.0f%%', startangle=90 )
 
 defaultFile = os.path.join( '.', 'userdata', 'groups.yaml' )
 class GroupMan( object ):

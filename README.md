@@ -24,6 +24,13 @@ If you ever wondered where all your money was going and thought a graph would he
 
 ## Potential Features
 
+- Pie chart: label amount, fix ylabel, include total
+- Mark the events in "other" on exclusive
+- Cumulative label totals
+- Fill stack, label totals (include reset button)
+- Choose and maintain colors
+- keep state on close, recover on open
+- reorder groups
 - Specify budget for a group and compare to actual transactions
 - Specify an amount in an account in order to track state and not just changes
 - Collect common downloadable formats for various financial institutions
@@ -32,5 +39,4 @@ If you ever wondered where all your money was going and thought a graph would he
 - Controls for graph including export image, appearance adjustment, subplots, date range
 - Undo/redo buffer
 - Ledger editing
-- Look less ugly
 - Installer that doesn't require knowledge of python and git

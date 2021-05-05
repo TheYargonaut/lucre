@@ -90,12 +90,13 @@ class MainWindow( tk.Tk ):
         self.ax = self.fig.add_subplot( 111 )
         if self.exclusive:
             groups = [ self.group.groups[ a ] for a in active ]
-            blacklist = sum( ( g.whitelist for k, g in self.group.groups.items() if k not in active ), start=[] )
+            blacklist = sum( ( g.whitelist for k, g in self.group.groups.items() if k not in active ), [] )
             part = Partition( groups=groups, blacklist=blacklist )
             getattr( part, self.plotType )( df, self.ax )
         else:
             for a in active:
                 getattr( self.group.groups[ a ], self.plotType )( df, self.ax )
+        self.ax.legend( handles=self.ax.lines )
         self.chartWidget.draw()
     
     def makeChart( self ):
