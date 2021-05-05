@@ -131,7 +131,7 @@ class Partition( object ):
     def plotPie( self, df, ax ):
         total = { title: abs( data[ 'amount' ].sum() ) for title, data in self.filter( df ).items() }
         series = pd.Series( total, name="" ).sort_values()
-        series.plot.pie( ax=ax, autopct='%1.0f%%', startangle=90,
+        series.plot.pie( ax=ax, autopct='%1.0f%%', labeldistance=1.1,
                          labels=[ "%s:$%1.2f" % item for item in series.iteritems() ] )
 
 defaultFile = os.path.join( '.', 'userdata', 'groups.yaml' )
