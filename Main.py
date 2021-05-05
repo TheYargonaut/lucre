@@ -96,7 +96,8 @@ class MainWindow( tk.Tk ):
         else:
             for a in active:
                 getattr( self.group.groups[ a ], self.plotType )( df, self.ax )
-        self.ax.legend( handles=self.ax.lines )
+        if self.plotType != 'plotPie':
+            self.ax.legend( handles=self.ax.lines )
         self.chartWidget.draw()
     
     def makeChart( self ):

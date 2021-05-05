@@ -24,7 +24,7 @@ If you ever wondered where all your money was going and thought a graph would he
 
 ## Potential Features
 
-- Pie chart: label amount, fix ylabel, include total
+- Pie chart: label amount, include total
 - Mark the events in "other" on exclusive
 - Cumulative label totals
 - Fill stack, label totals (include reset button)

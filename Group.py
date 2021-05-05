@@ -93,11 +93,11 @@ class Partition( object ):
                 r[ g.title ].loc[ :, 'amount' ] = -r[ g.title ][ 'amount' ]
             df = df[ ~f ]
         if edges:
-            r[ 'other' ] = pd.concat( [ early, df, late ] ).reset_index( drop=True )
+            r[ 'Other' ] = pd.concat( [ early, df, late ] ).reset_index( drop=True )
         else:
-            r[ 'other' ] = df
+            r[ 'Other' ] = df
         if self.negate:
-            r[ 'other' ].loc[ :, 'amount' ] = -r[ 'other' ][ 'amount' ]
+            r[ 'Other' ].loc[ :, 'amount' ] = -r[ 'Other' ][ 'amount' ]
         return r
     
     def plotAmount( self, df, ax ):
@@ -126,11 +126,13 @@ class Partition( object ):
         stack = None
         for g in self.groups:
             stack = self.plotLayer( stack, data[ g.title ], g.title, ax )
-        self.plotLayer( stack, data[ 'other' ], 'other', ax )
+        self.plotLayer( stack, data[ 'Other' ], 'Other', ax )
     
     def plotPie( self, df, ax ):
         total = { title: abs( data[ 'amount' ].sum() ) for title, data in self.filter( df ).items() }
-        pd.Series( total ).sort_values().plot.pie( ax=ax, autopct='%1.0f%%', startangle=90 )
+        series = pd.Series( total, name="" ).sort_values()
+        series.plot.pie( ax=ax, autopct='%1.0f%%', startangle=90,
+                         labels=[ "%s:$%1.2f" % item for item in series.iteritems() ] )
 
 defaultFile = os.path.join( '.', 'userdata', 'groups.yaml' )
 class GroupMan( object ):
