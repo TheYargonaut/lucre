@@ -1,7 +1,8 @@
 import tkinter as tk
+from tkinter.colorchooser import askcolor, Chooser
 from tkinter import ttk
 from Scrollable import Scrollable
-from Table import Table, DfTable
+from Table import DfTable
 from List import ListView
 from Group import Group
 # window for editing a group
@@ -32,12 +33,6 @@ class EditGroupWindow( tk.Toplevel ):
         for r, m, l in zip( self.table.cells, mask, self.lastMask ):
             for c in r:
                 c.config( disabledbackground=self.highlight if m else self.ignored )
-            # if m and not l:
-            #     for c in r:
-            #         c.config( background=self.highlight ) # highlight row
-            # if l and not m:
-            #     for c in r:
-            #         c.config( background=self.ignored ) # unhighlight row
         self.lastMask = mask
     
     def finalize( self ):
@@ -45,6 +40,7 @@ class EditGroupWindow( tk.Toplevel ):
         self.groupBack.blacklist = [ r for r in self.group.blacklist if r ]
         self.groupBack.negate = self.group.negate
         self.groupBack.title = self.group.title
+        self.groupBack.color = self.group.color
         self.titleWidget.config( text=self.group.title )
         self.ledger.updateCb( self.ledger.df )
         self.destroy()
@@ -62,6 +58,10 @@ class EditGroupWindow( tk.Toplevel ):
     
     def expenseCb( self, value ):
         self.group.negate = value == 'expense'
+    
+    def colorCb( self ):
+        self.group.color = askcolor( self.group.color, parent=self )[ 1 ]
+        self.color.config( fg=self.group.color )
     
     def resizePreview( self, size ):
         if self.table is not None:
@@ -112,6 +112,9 @@ class EditGroupWindow( tk.Toplevel ):
 
         nameFrame = ttk.Frame( mainFrame )
         nameFrame.grid( row=0, column=0, sticky=tk.NSEW )
+        self.color = tk.Button( nameFrame, text="\u2B1B", command=self.colorCb, width=3 )
+        self.color.config( fg=self.group.color )
+        self.color.pack( side=tk.LEFT, fill=tk.NONE, expand=False )
         self.nameVar = tk.StringVar( nameFrame )
         self.nameVar.set( self.group.title )
         self.nameVar.trace( 'w', self.nameCb )

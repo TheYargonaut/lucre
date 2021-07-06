@@ -91,7 +91,7 @@ class MainWindow( tk.Tk ):
         if self.exclusive:
             groups = [ self.group.groups[ a ] for a in active ]
             blacklist = sum( ( g.whitelist for k, g in self.group.groups.items() if k not in active ), [] )
-            part = Partition( groups=groups, blacklist=blacklist )
+            part = Partition( groups=groups, blacklist=blacklist, otherColor=self.group.newColor() )
             getattr( part, self.plotType )( df, self.ax )
         else:
             for a in active:
@@ -114,7 +114,6 @@ class MainWindow( tk.Tk ):
     
     def activateGroup( self, label, state ):
         self.group.setActive( label, state )
-        self.redraw()
 
     def build( self ):
         self.grid_rowconfigure( 0, weight=1 )

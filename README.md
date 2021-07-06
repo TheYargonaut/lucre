@@ -21,12 +21,17 @@ If you ever wondered where all your money was going and thought a graph would he
 - Import from different layouts by specifying relevant columns
 - Save and re-use groups, formats, and your ledger
 - Provide easy access to multiple different kinds of chart, including individual events, cumulative change, combined change, and pie charts
+- Pie chart: label amount, include total
+- Cumulative label totals
+- choose color for each group
 
 ## Potential Features
 
-- Pie chart: label amount, include total
-- Mark the events in "other" on exclusive
-- Cumulative label totals
+- see partition on log (with chosen colors and other) (use as excuse to overhaul highlighting)
+- time window
+- multiple panels (with separate date restrictions)
+
+
 - Fill stack, label totals (include reset button)
 - Choose and maintain colors
 - keep state on close, recover on open

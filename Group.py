@@ -2,6 +2,7 @@ import os, yaml, pdb
 import pandas as pd
 from functools import reduce
 from Format import internalFmt
+import numpy as np
 
 # basic event grouping
 
@@ -12,12 +13,13 @@ def matchAny( regexList, df, column='memo' ):
                    False )
 
 class Group( object ):
-    def __init__( self, title="", whitelist=[], blacklist=[], negate=False ):
+    def __init__( self, title="", whitelist=[], blacklist=[], negate=False, color=None ):
         '''blacklist overrides whitelist'''
         self.title = title
         self.whitelist = whitelist
         self.blacklist = blacklist
         self.negate = negate
+        self.color = color
     
     def applyWhitelist( self, df ):
         return matchAny( self.whitelist, df )
@@ -41,7 +43,7 @@ class Group( object ):
             df[ self.title ] = -df[ 'amount' ]
         else:
             df[ self.title ] = df[ 'amount' ]
-        df.plot( x='date', y=self.title, ax=ax, style='o' )
+        df.plot( x='date', y=self.title, ax=ax, marker='o', color=self.color, linestyle='' )
     
     def plotCumulative( self, df, ax ):
         early = pd.DataFrame( dict( date=df[ 'date' ].min(),
@@ -56,20 +58,26 @@ class Group( object ):
             df[ self.title ] = -df[ 'amount' ].cumsum()
         else:
             df[ self.title ] = df[ 'amount' ].cumsum()
-        df.plot( x='date', y=self.title, ax=ax, drawstyle="steps-post" )
+        df.plot( x='date', y=self.title, ax=ax, drawstyle="steps-post", color=self.color )
 
     def keys( self ):
-        return 'title', 'whitelist', 'blacklist', 'negate'
+        return 'title', 'whitelist', 'blacklist', 'negate', 'color'
 
     def __getitem__( self, key ):
         return getattr( self, key )
 
 class Partition( object ):
-    def __init__( self, groups=[], blacklist=[], negate=False ):
+    def __init__( self, groups=[], blacklist=[], negate=False, otherColor=None ):
         'negate applies to the other group'
         self.groups = groups
         self.blacklist = blacklist
         self.negate = negate
+        self.otherColor = otherColor
+    
+    def colorDict( self ):
+        cd = { g.title : g.color for g in self.groups }
+        cd[ 'Other' ] = self.otherColor
+        return cd
     
     def filter( self, df, edges=True ):
         'split into g+1 groups and return as dictionary'
@@ -101,52 +109,69 @@ class Partition( object ):
         return r
     
     def plotAmount( self, df, ax ):
+        cd = self.colorDict()
         for title, data in self.filter( df, False ).items():
             data.loc[ :, title ] = data[ 'amount' ]
             if not data.empty:
-                data.plot( x='date', y=title, ax=ax, style='o' )
+                data.plot( x='date', y=title, ax=ax, marker='o', color=cd[ title ], linestyle='' )
 
     def plotCumulative( self, df, ax ):
+        cd = self.colorDict()
         for title, data in self.filter( df ).items():
             data[ title ] = data[ 'amount' ].cumsum()
             if not data.empty:
-                data.plot( x='date', y=title, ax=ax, drawstyle='steps-post' )
+                data.plot( x='date', y=title, ax=ax, drawstyle='steps-post', color=cd[ title ] )
 
-    def plotLayer( self, stack, layer, title, ax ):
+    def plotLayer( self, stack, layer, title, ax, cd ):
         if stack is None:
             stack = layer
         else:
             stack = pd.concat( [ stack, layer ] ).sort_values( 'date' ).reset_index( drop=True )
         stack[ title ] = stack[ 'amount' ].cumsum()
-        stack.plot( x='date', y=title, ax=ax, drawstyle='steps-post' )
+        stack.plot( x='date', y=title, ax=ax, drawstyle='steps-post', color=cd[ title ] )
         return stack[ internalFmt ]
 
     def plotStack( self, df, ax ):
+        cd = self.colorDict()
         data = self.filter( df )
         stack = None
         for g in self.groups:
-            stack = self.plotLayer( stack, data[ g.title ], g.title, ax )
-        self.plotLayer( stack, data[ 'Other' ], 'Other', ax )
+            stack = self.plotLayer( stack, data[ g.title ], g.title, ax, cd )
+        self.plotLayer( stack, data[ 'Other' ], 'Other', ax, cd )
     
     def plotPie( self, df, ax ):
         total = { title: abs( data[ 'amount' ].sum() ) for title, data in self.filter( df ).items() }
         series = pd.Series( total, name="" ).sort_values()
+        cd = self.colorDict()
+        colors = [ cd[s] for s in series.keys() ]
         series.plot.pie( ax=ax, autopct='%1.0f%%', labeldistance=1.1,
                          title="Total: $%1.2f" % sum( total.values() ),
-                         labels=[ "%s: $%1.2f" % item for item in series.iteritems() ] )
+                         labels=[ "%s: $%1.2f" % item for item in series.iteritems() ],
+                         colors=colors )
 
 defaultFile = os.path.join( '.', 'userdata', 'groups.yaml' )
+def randomColor():
+    return '#%06x' % np.random.randint( 0xFFFFFF )
 class GroupMan( object ):
     def __init__( self, groups=[], updateCb=lambda active:None ):
         self.groups = { i:g for i, g in enumerate( groups ) }
         self.updateCb = updateCb
         self.uids = len( self.groups )
         self.active = set() # keys pointing to active groups
+        self.newColorCache = None # return same new-color until actually added for stability
+    
+    def newColor( self ):
+        colors = [ g.color.lower() for g in self.groups.values() if g.color ]
+        nc = self.newColorCache
+        while ( not nc ) or nc in colors:
+            nc = randomColor()
+        self.newColorCache = nc
+        return nc
     
     def create( self ):
         i = self.uids
         self.uids += 1
-        self.groups[ i ] = Group( "Untitled", [], [], False )
+        self.groups[ i ] = Group( "Untitled", [], [], False, self.newColor )
         return i
     
     def setActive( self, key, state ):
@@ -162,6 +187,10 @@ class GroupMan( object ):
             with open( filename, 'r' ) as f:
                 ingroup = { i:Group( **g ) for i, g in enumerate( yaml.load( f, Loader=yaml.FullLoader ), start=self.uids ) }
                 self.uids += len( ingroup )
+                # assign color where it doesn't exist yet
+                # for g in ingroup.values():
+                #     if not g.color:
+                #         g.color = self.newColor()
                 self.groups.update( ingroup )
                 self.updateCb( self.active )
             return True
