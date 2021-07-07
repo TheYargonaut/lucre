@@ -19,7 +19,7 @@ class EditGroupWindow( tk.Toplevel ):
         self.ledger = ledger
         self.psize = psize
         self.titleWidget = titleWidget
-        self.highlight = "white"
+        self.highlight = self.group.color # "white"
         self.ignored = "#E00E00E00" # gray
         self.table = None
         self.build()
@@ -30,9 +30,8 @@ class EditGroupWindow( tk.Toplevel ):
         mask = self.group.filter( self.ledger.df )
         if self.lastMask is None:
             self.lastMask = ~mask
-        for r, m, l in zip( self.table.cells, mask, self.lastMask ):
-            for c in r:
-                c.config( disabledbackground=self.highlight if m else self.ignored )
+        for r, m, l in zip( range( self.table.shape[ 0 ] ), mask, self.lastMask ):
+            self.table.configRowColor( r, self.highlight if m else self.ignored )
         self.lastMask = mask
     
     def finalize( self ):
@@ -61,7 +60,9 @@ class EditGroupWindow( tk.Toplevel ):
     
     def colorCb( self ):
         self.group.color = askcolor( self.group.color, parent=self )[ 1 ]
+        self.highlight = self.group.color
         self.color.config( fg=self.group.color )
+        self.matchListCb()
     
     def resizePreview( self, size ):
         if self.table is not None:

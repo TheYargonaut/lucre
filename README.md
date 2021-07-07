@@ -28,7 +28,7 @@ If you ever wondered where all your money was going and thought a graph would he
 
 ## Potential Features
 
-- see partition on log (with chosen colors and other) (also overhaul highlighting)
+- see partition on log (with chosen colors and other)
 - multiple panels (with separate date restrictions, for time period comparison)
 - bar graph (sync height across panels?)
 
