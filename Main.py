@@ -1,6 +1,7 @@
 from pandas.core.base import DataError
 from DateRangeWidget import DateRangeWidget
 from EditGroup import editGroupCb
+from ViewLedgerWindow import viewLedgerCb
 from Format import FormatMan
 from Group import Partition, GroupMan
 from ImportLedger import importLedgerCb
@@ -19,7 +20,7 @@ import pdb
 pd.plotting.register_matplotlib_converters()
 
 class GroupList( ListView ):
-    def __init__( self, parent, back=[], addButton=None, addCb=lambda:None, activeCb=lambda idx, state:None, editCb=lambda idx, activator:None, **kwargs ):
+    def __init__( self, parent, back=[], addButton=None, addCb=lambda:None, activeCb=lambda *_:None, editCb=lambda *_:None, **kwargs ):
         self.addCb = addCb
         self.activeCb = activeCb
         self.editCb = editCb
@@ -34,14 +35,16 @@ class GroupList( ListView ):
             self.activeCb( label, bool( var.get() ) )
         activator = ttk.Checkbutton( groupCell, variable=var, text=self.back[ label ].title, command=activate )
         activator.grid( row=0, column=0, rowspan=2, sticky=tk.NSEW )
+        color = tk.Label( groupCell, text="\u2B1B", fg=self.back[ label ].color )
+        color.grid( row=0, column=2, rowspan=2, sticky=tk.NSEW )
         def remove( *args, groupCell=groupCell, label=label ):
             self.activeCb( label, False )
             del self.back[ label ]
             groupCell.destroy()
         remover = ttk.Button( groupCell, text='Delete', command=remove )
         remover.grid( row=0, column=1, sticky=tk.NSEW )
-        def edit( *args, label=label, activator=activator ):
-            self.editCb( label, activator )
+        def edit( *args, label=label, activator=activator, color=color ):
+            self.editCb( label, activator, color )
         editor = ttk.Button( groupCell, text='Edit', command=edit )
         editor.grid( row=1, column=1, sticky=tk.NSEW )
         return groupCell
@@ -119,9 +122,12 @@ class MainWindow( tk.Tk ):
         self.dateRangeW = DateRangeWidget( chartFrame, self.setDateRange )
         self.dateRangeW.grid( row=1, column=0, sticky=tk.W )
     
-    def editGroup( self, idx, activator ):
-        editGroupCb( self, self.group.groups[ idx ], self.ledger, 20, activator )()
+    def editGroup( self, idx, activator, color ):
+        editGroupCb( self, self.group.groups[ idx ], self.ledger, 20, activator, color )()
         
+    def viewLedger( self ):
+        viewLedgerCb( self, self.group.groups, self.ledger.df )()
+
     def setPlotType( self, *args ):
         self.plotType = choiceToFunc[ self.plotTypeVar.get() ]
         self.redraw()
@@ -142,6 +148,8 @@ class MainWindow( tk.Tk ):
 
         importLedgerButton = ttk.Button( controlFrame, text="Import Ledger", command=importLedgerCb( self, self.ledger, self.format, 20 ) )
         importLedgerButton.pack( side=tk.TOP, fill=tk.X )
+        viewLedgerButton = ttk.Button( controlFrame, text="Browse Ledger", command=self.viewLedger )
+        viewLedgerButton.pack( side=tk.TOP, fill=tk.X )
 
         groupScroll = Scrollable( controlFrame, vertical=True )
         groupScroll.pack( side=tk.TOP, fill=tk.BOTH, expand=True )

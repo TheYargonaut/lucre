@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter.colorchooser import askcolor, Chooser
+from tkinter.colorchooser import askcolor
 from tkinter import ttk
 from Scrollable import Scrollable
 from Table import DfTable
@@ -10,7 +10,7 @@ from Group import Group
 prevLens = [ 10, 25, 100 ]
 
 class EditGroupWindow( tk.Toplevel ):
-    def __init__( self, master, group, ledger, psize, titleWidget, *args, **kwargs ):
+    def __init__( self, master, group, ledger, psize, titleWidget, colorWidget, *args, **kwargs ):
         tk.Toplevel.__init__( self, master, *args, **kwargs )
         self.title( "edit group" )
         self.lastMask = None
@@ -19,6 +19,7 @@ class EditGroupWindow( tk.Toplevel ):
         self.ledger = ledger
         self.psize = psize
         self.titleWidget = titleWidget
+        self.colorWidget = colorWidget
         self.highlight = self.group.color # "white"
         self.ignored = "#E00E00E00" # gray
         self.table = None
@@ -41,6 +42,7 @@ class EditGroupWindow( tk.Toplevel ):
         self.groupBack.title = self.group.title
         self.groupBack.color = self.group.color
         self.titleWidget.config( text=self.group.title )
+        self.colorWidget.config( fg=self.group.color )
         self.ledger.updateCb( self.ledger.df )
         self.destroy()
         
@@ -128,8 +130,8 @@ class EditGroupWindow( tk.Toplevel ):
         self.scroll.grid( row=1, column=0, sticky=tk.NE + tk.S )
         self.resizePreview( self.psize )
 
-def editGroupCb( master, group, ledger, psize, titleWidget ):
-    def cb( master=master, group=group, ledger=ledger, psize=psize, titleWidget=titleWidget ):
-        window = EditGroupWindow( master, group, ledger, psize, titleWidget )
+def editGroupCb( master, group, ledger, psize, titleWidget, colorWidget ):
+    def cb( master=master, group=group, ledger=ledger, psize=psize, titleWidget=titleWidget, colorWidge=colorWidget ):
+        window = EditGroupWindow( master, group, ledger, psize, titleWidget, colorWidget )
         master.wait_window( window )
     return cb

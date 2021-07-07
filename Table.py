@@ -72,11 +72,14 @@ class Table( ttk.Frame ):
         self.shape[ 1 ] += 1
     
     def configRowColor( self, row, color ):
+        value = sum( int( c, 16 ) for c in ( color[ 1:3 ], color[ 3:5 ], color[ 5:7 ] ) ) / ( 3 * 0xFF )
+        fg = "#000000" if value > 0.5 else "#FFFFFF"
         for cell in self.cells[ row ]:
             cell.config( 
                 background=color,
                 readonlybackground=color,
                 disabledbackground=color,
+                fg=fg
             )
 
 class DfTable( Table ):
