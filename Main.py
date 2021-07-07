@@ -1,3 +1,5 @@
+from pandas.core.base import DataError
+from DateRangeWidget import DateRangeWidget
 from EditGroup import editGroupCb
 from Format import FormatMan
 from Group import Partition, GroupMan
@@ -68,6 +70,7 @@ class MainWindow( tk.Tk ):
         tk.Tk.__init__( self )
         self.plotType = "plotAmount"
         self.exclusive = True
+        self.dateRange = None, None
         self.makeChart()
         self.format = FormatMan()
         self.group = GroupMan( updateCb=self.redraw )
@@ -82,6 +85,10 @@ class MainWindow( tk.Tk ):
     
     def redraw( self, *args ):
         df = self.ledger.df
+        if self.dateRange[ 0 ]:
+            df = df.loc[ df[ 'date' ] >= self.dateRange[ 0 ] ]
+        if self.dateRange[ 1 ]:
+            df = df.loc[ df[ 'date' ] <= self.dateRange[ 1 ] ]
         active = self.group.active
         self.fig.clf()
         if not active:
@@ -101,15 +108,25 @@ class MainWindow( tk.Tk ):
         self.chartWidget.draw()
     
     def makeChart( self ):
+        chartFrame = ttk.Frame( self )
+        chartFrame.grid( row=0, column=0, sticky=tk.NSEW )
+        chartFrame.grid_rowconfigure( 0, weight=1 )
+        chartFrame.grid_columnconfigure( 0, weight=1 )
         self.fig = plt.Figure()
-        self.chartWidget = FigureCanvasTkAgg( self.fig, self )
+        self.chartWidget = FigureCanvasTkAgg( self.fig, chartFrame )
         self.chartWidget.get_tk_widget().grid( row=0, column=0, sticky=tk.NSEW )
+        self.dateRangeW = DateRangeWidget( chartFrame, self.setDateRange )
+        self.dateRangeW.grid( row=1, column=0, sticky=tk.W )
     
     def editGroup( self, idx, activator ):
         editGroupCb( self, self.group.groups[ idx ], self.ledger, 20, activator )()
         
     def setPlotType( self, *args ):
         self.plotType = choiceToFunc[ self.plotTypeVar.get() ]
+        self.redraw()
+    
+    def setDateRange( self, l, h ):
+        self.dateRange = l, h
         self.redraw()
     
     def activateGroup( self, label, state ):

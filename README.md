@@ -24,16 +24,16 @@ If you ever wondered where all your money was going and thought a graph would he
 - Pie chart: label amount, include total
 - Cumulative label totals
 - choose color for each group
+- date windowing
 
 ## Potential Features
 
-- see partition on log (with chosen colors and other) (use as excuse to overhaul highlighting)
-- time window
-- multiple panels (with separate date restrictions)
+- see partition on log (with chosen colors and other) (also overhaul highlighting)
+- multiple panels (with separate date restrictions, for time period comparison)
+- bar graph (sync height across panels?)
 
 
 - Fill stack, label totals (include reset button)
-- Choose and maintain colors
 - keep state on close, recover on open
 - reorder groups
 - Specify budget for a group and compare to actual transactions
