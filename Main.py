@@ -50,12 +50,13 @@ class GroupList( ListView ):
         self.cells.append( self.initCell( self.addCb() ) )
 
 typesInclusive = [ "event", "cumulative" ]
-typesExclusive = typesInclusive + [ "stack", "pie" ]
+typesExclusive = typesInclusive + [ "stack", "bar", "pie" ]
 choiceToFunc = dict(
     event="plotAmount",
     cumulative="plotCumulative",
     stack="plotStack",
     pie="plotPie",
+    bar="plotBar"
 )
 
 def setMenuOptions( widget, var, options ):

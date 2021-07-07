@@ -148,6 +148,13 @@ class Partition( object ):
                          title="Total: $%1.2f" % sum( total.values() ),
                          labels=[ "%s: $%1.2f" % item for item in series.iteritems() ],
                          colors=colors )
+    
+    def plotBar( self, df, ax ):
+        total = { title: abs( data[ 'amount' ].sum() ) for title, data in self.filter( df ).items() }
+        series = pd.Series( total, name="" ).sort_values( ascending=False )
+        cd = self.colorDict()
+        colors = [ cd[s] for s in series.keys() ]
+        series.plot.bar( ax=ax, color=colors )
 
 defaultFile = os.path.join( '.', 'userdata', 'groups.yaml' )
 def randomColor():
