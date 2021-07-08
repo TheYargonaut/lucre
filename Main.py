@@ -146,20 +146,23 @@ class MainWindow( tk.Tk ):
         controlFrame = ttk.Frame( self )
         controlFrame.grid( row=0, column=1, sticky=tk.NSEW )
 
+        controlFrame.grid_columnconfigure( 0, weight=1 )
+        controlFrame.grid_rowconfigure( 2, weight=1 )
+
         importLedgerButton = ttk.Button( controlFrame, text="Import Ledger", command=importLedgerCb( self, self.ledger, self.format, 20 ) )
-        importLedgerButton.pack( side=tk.TOP, fill=tk.X )
+        importLedgerButton.grid( row=0, column=0, sticky=tk.NSEW )
         viewLedgerButton = ttk.Button( controlFrame, text="Browse Ledger", command=self.viewLedger )
-        viewLedgerButton.pack( side=tk.TOP, fill=tk.X )
+        viewLedgerButton.grid( row=1, column=0, sticky=tk.NSEW )
 
         groupScroll = Scrollable( controlFrame, vertical=True )
-        groupScroll.pack( side=tk.TOP, fill=tk.BOTH, expand=True )
+        groupScroll.grid( row=2, column=0, sticky=tk.NSEW )
         groupList = GroupList( groupScroll, self.group.groups, "New Group", self.group.create, self.activateGroup, self.editGroup )
         groupList.pack()
         
         self.plotTypeVar = tk.StringVar()
         self.plotTypeVar.trace( 'w', self.setPlotType )
         self.plotTypeMenu = ttk.OptionMenu( controlFrame, self.plotTypeVar, typesExclusive[ 0 ], *typesExclusive )
-        self.plotTypeMenu.pack( side=tk.BOTTOM, fill=tk.X )
+        self.plotTypeMenu.grid( row=4, column=0, sticky=tk.NSEW )
 
         exclusiveVar = tk.IntVar()
         exclusiveVar.set( 1 )
@@ -169,7 +172,7 @@ class MainWindow( tk.Tk ):
             self.redraw()
 
         exclusiveToggle = ttk.Checkbutton( controlFrame, variable=exclusiveVar, text="Exclusive", command=exclusiveCb )
-        exclusiveToggle.pack( side=tk.BOTTOM, fill=tk.X )
+        exclusiveToggle.grid( row=3, column=0, sticky=tk.NSEW )
 
 # make the window
 top = MainWindow()

@@ -20,6 +20,7 @@ class ListView( ttk.Frame ):
     def appendCell( self ):
         self.back.append( '' )
         self.cells.append( self.initCell( len( self.back ) - 1 ) )
+        self.cb( '' )
     
     def initCell( self, label ):
         cell = self.makeCell( label )

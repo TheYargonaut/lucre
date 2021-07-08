@@ -178,7 +178,7 @@ class GroupMan( object ):
     def create( self ):
         i = self.uids
         self.uids += 1
-        self.groups[ i ] = Group( "Untitled", [], [], False, self.newColor )
+        self.groups[ i ] = Group( "Untitled", [], [], False, self.newColor() )
         return i
     
     def setActive( self, key, state ):
@@ -192,17 +192,19 @@ class GroupMan( object ):
         'load groups from file, add to existing groups. returns successful'
         try:
             with open( filename, 'r' ) as f:
-                ingroup = { i:Group( **g ) for i, g in enumerate( yaml.load( f, Loader=yaml.FullLoader ), start=self.uids ) }
-                self.uids += len( ingroup )
-                # assign color where it doesn't exist yet
-                # for g in ingroup.values():
-                #     if not g.color:
-                #         g.color = self.newColor()
-                self.groups.update( ingroup )
-                self.updateCb( self.active )
-            return True
+                raw = yaml.load( f, Loader=yaml.FullLoader )
         except FileNotFoundError:
             return False
+        if raw:
+            ingroup = { i:Group( **g ) for i, g in enumerate( raw, start=self.uids ) }
+            self.uids += len( ingroup )
+            # assign color where it doesn't exist yet
+            # for g in ingroup.values():
+            #     if not g.color:
+            #         g.color = self.newColor()
+            self.groups.update( ingroup )
+            self.updateCb( self.active )
+        return True
 
     def save( self, filename=defaultFile ):
         'save groups to file'
