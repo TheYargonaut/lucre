@@ -2,7 +2,6 @@ import tkinter as tk
 from tkinter import ttk
 from Scrollable import Scrollable
 from Table import DfTable
-from List import ListView
 # window for browsing the ledger
 
 prevLens = [ 10, 25, 100 ]

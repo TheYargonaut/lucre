@@ -1,5 +1,5 @@
-from pandas.core.base import DataError
 from DateRangeWidget import DateRangeWidget
+from GroupControlWidget import GroupControlWidget
 from EditGroup import editGroupCb
 from ViewLedgerWindow import viewLedgerCb
 from Format import FormatMan
@@ -27,27 +27,7 @@ class GroupList( ListView ):
         ListView.__init__( self, parent, back, addButton, **kwargs )
 
     def makeCell( self, label, **kwargs ):
-        groupCell = ttk.Frame( self )
-        groupCell.grid_columnconfigure( 0, weight=1 )
-        var = tk.IntVar()
-        var.set( 0 )
-        def activate( label=label, var=var ):
-            self.activeCb( label, bool( var.get() ) )
-        activator = ttk.Checkbutton( groupCell, variable=var, text=self.back[ label ].title, command=activate )
-        activator.grid( row=0, column=0, rowspan=2, sticky=tk.NSEW )
-        color = tk.Label( groupCell, text="\u2B1B", fg=self.back[ label ].color )
-        color.grid( row=0, column=2, rowspan=2, sticky=tk.NSEW )
-        def remove( *args, groupCell=groupCell, label=label ):
-            self.activeCb( label, False )
-            del self.back[ label ]
-            groupCell.destroy()
-        remover = ttk.Button( groupCell, text='Delete', command=remove )
-        remover.grid( row=0, column=1, sticky=tk.NSEW )
-        def edit( *args, label=label, activator=activator, color=color ):
-            self.editCb( label, activator, color )
-        editor = ttk.Button( groupCell, text='Edit', command=edit )
-        editor.grid( row=1, column=1, sticky=tk.NSEW )
-        return groupCell
+        return GroupControlWidget( self, label, self.back, self.addCb, self.activeCb, self.editCb )
     
     def appendCell( self ):
         self.cells.append( self.initCell( self.addCb() ) )
