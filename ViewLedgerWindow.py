@@ -1,10 +1,7 @@
 import tkinter as tk
-from tkinter import ttk
-from Scrollable import Scrollable
-from Table import DfTable
-# window for browsing the ledger
+from ViewLedgerWidget import ViewLedgerWidget
 
-prevLens = [ 10, 25, 100 ]
+# window for browsing the ledger
 
 class ViewLedgerWindow( tk.Toplevel ):
     def __init__( self, master, group, ledger, *args, **kwargs ):
@@ -13,39 +10,22 @@ class ViewLedgerWindow( tk.Toplevel ):
         self.group = group
         self.ledger = ledger
 
-        self.table = None
-        self.psize = prevLens[ 1 ]
+        self.view = None
         self.build()
     
-    def resizePreview( self, size ):
-        if self.table is not None:
-            self.table.destroy()
-            self.table = None
-        self.table = DfTable( self.scroll, self.ledger.head( int( size ) ) )
-        self.table.pack( side=tk.TOP, fill=tk.BOTH, expand=True )
+    def updateCb( self, view ):
+        df = self.ledger.head( len( view ) )
+        mask = [ group.filter( df ) for group in self.group.values() ]
 
-        for row in range( self.table.shape[ 0 ] ):
-            for group in self.group.values():
-                if group.filter( self.ledger.iloc[ row:row+1 ] ).all():
-                    self.table.configRowColor( row, group.color )
+        for row in range( len( view ) ):
+            for m, g in zip( mask, self.group.values() ):
+                if m.iloc[ row ]:
+                    view.highlightRow( row, g.color )
                     break
     
     def build( self ):
-        self.scroll = Scrollable( self, True, True )
-        self.scroll.pack( side=tk.TOP, fill=tk.BOTH )
-        
-        self.controlFrame = ttk.Frame( self )
-        self.controlFrame.pack( side=tk.BOTTOM, fill=tk.X )
-
-        self.resizePreview( self.psize )
-        prevLenMenu = ttk.OptionMenu(
-            self.controlFrame,
-            tk.StringVar( self.controlFrame ),
-            str( self.psize ),
-            *[ str( p ) for p in prevLens if p < self.ledger.shape[ 0 ] ], self.ledger.shape[ 0 ],
-            command=self.resizePreview
-        )
-        prevLenMenu.pack( side=tk.LEFT )
+        self.view = ViewLedgerWidget( self, self.ledger, self.updateCb )
+        self.view.pack()
 
 def viewLedgerCb( master, group, ledger ):
     def cb( master=master, group=group, ledger=ledger ):

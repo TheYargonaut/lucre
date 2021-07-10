@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
+from List import ListView
 
 # control widget for groups
 
@@ -52,3 +53,16 @@ class GroupControlWidget( ttk.Frame ):
         self.editCb( self.label )
         self.activateButton.config( text=self.back[ self.label ].title )
         self.color.config( fg=self.back[ self.label ].color )
+
+class GroupList( ListView ):
+    def __init__( self, parent, back=[], addButton=None, addCb=lambda:None, activeCb=lambda *_:None, editCb=lambda *_:None, **kwargs ):
+        self.addCb = addCb
+        self.activeCb = activeCb
+        self.editCb = editCb
+        ListView.__init__( self, parent, back, addButton, **kwargs )
+
+    def makeCell( self, label, **kwargs ):
+        return GroupControlWidget( self, label, self.back, self.addCb, self.activeCb, self.editCb )
+    
+    def appendCell( self ):
+        self.cells.append( self.initCell( self.addCb() ) )

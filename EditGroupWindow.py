@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter.colorchooser import askcolor
 from tkinter import ttk
 from Scrollable import Scrollable
-from Table import DfTable
+from ViewLedgerWidget import ViewLedgerWidget
 from List import ListView
 from Group import Group
 
@@ -20,15 +20,15 @@ class EditGroupWindow( tk.Toplevel ):
         self.psize = psize
         self.highlight = self.group.color # "white"
         self.ignored = "#E00E00E00" # gray
-        self.table = None
+        self.view = None
         self.build()
-        self.matchListCb()
+        self.matchListCb( self.view )
     
-    def matchListCb( self, *args ):
+    def matchListCb( self, view ):
         'set the highlights when group lists change'
-        mask = self.group.filter( self.ledger.df )
-        for r, m in zip( range( self.table.shape[ 0 ] ), mask ):
-            self.table.configRowColor( r, self.highlight if m else self.ignored )
+        mask = self.group.filter( self.ledger.df.head( len( view ) ) )
+        for r, m in enumerate( mask ):
+            view.highlightRow( r, self.highlight if m else self.ignored )
     
     def finalize( self ):
         self.groupBack.whitelist = [ r for r in self.group.whitelist if r ]
@@ -41,11 +41,11 @@ class EditGroupWindow( tk.Toplevel ):
         
     def whiteListCb( self, idx, txt ):
         self.group.whitelist[ idx ] = txt
-        self.matchListCb()
+        self.matchListCb( self.view )
     
     def blackListCb( self, idx, txt ):
         self.group.blacklist[ idx ] = txt
-        self.matchListCb()
+        self.matchListCb( self.view )
     
     def nameCb( self, *args ):
         self.group.title = self.nameVar.get()
@@ -57,16 +57,8 @@ class EditGroupWindow( tk.Toplevel ):
         self.group.color = askcolor( self.group.color, parent=self )[ 1 ]
         self.highlight = self.group.color
         self.color.config( fg=self.group.color )
-        self.matchListCb()
+        self.matchListCb( self.view )
     
-    def resizePreview( self, size ):
-        if self.table is not None:
-            self.table.destroy()
-            self.table = None
-        self.table = DfTable( self.scroll, self.ledger.df.head( int( size ) ) )
-        self.table.pack( side=tk.TOP, fill=tk.BOTH, expand=True )
-        self.matchListCb()
-
     def build( self ):
         self.grid_rowconfigure( 0, weight=1 )
         self.grid_columnconfigure( 0, weight=1 )
@@ -103,8 +95,6 @@ class EditGroupWindow( tk.Toplevel ):
         cancel.pack( side=tk.RIGHT )
         confirm = ttk.Button( button, text="Confirm", command=self.finalize )
         confirm.pack( side=tk.RIGHT )
-        prevLenMenu = ttk.OptionMenu( button, tk.StringVar( button ), str( self.psize ), *[ str( p ) for p in prevLens if p < self.ledger.df.shape[ 0 ] ], self.ledger.df.shape[ 0 ], command=self.resizePreview )
-        prevLenMenu.pack( side=tk.LEFT )
 
         nameFrame = ttk.Frame( mainFrame )
         nameFrame.grid( row=0, column=0, sticky=tk.NSEW )
@@ -119,9 +109,8 @@ class EditGroupWindow( tk.Toplevel ):
         style = ttk.OptionMenu( nameFrame, tk.StringVar( nameFrame ), ( "expense" if self.group.negate else "income" ), "income", "expense", command=self.expenseCb )
         style.pack( side=tk.RIGHT, fill=tk.NONE, expand=False )
 
-        self.scroll = Scrollable( mainFrame, True, True )
-        self.scroll.grid( row=1, column=0, sticky=tk.NE + tk.S )
-        self.resizePreview( self.psize )
+        self.view = ViewLedgerWidget( mainFrame, self.ledger.df, lenCb=self.matchListCb )
+        self.view.grid( row=1, column=0, sticky=tk.NE + tk.S )
 
 def editGroupCb( master, group, ledger, psize ):
     def cb( master=master, group=group, ledger=ledger, psize=psize ):

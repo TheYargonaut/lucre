@@ -1,12 +1,11 @@
 from DateRangeWidget import DateRangeWidget
-from GroupControlWidget import GroupControlWidget
-from EditGroup import editGroupCb
+from GroupControlWidget import GroupList
+from EditGroupWindow import editGroupCb
 from ViewLedgerWindow import viewLedgerCb
+from ImportLedgerWindow import importLedgerCb
 from Format import FormatMan
 from Group import Partition, GroupMan
-from ImportLedger import importLedgerCb
 from Ledger import LedgerMan
-from List import ListView
 from Scrollable import Scrollable
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from tkinter import ttk
@@ -15,22 +14,7 @@ import os
 import pandas as pd
 import tkinter as tk
 
-import pdb
-
 pd.plotting.register_matplotlib_converters()
-
-class GroupList( ListView ):
-    def __init__( self, parent, back=[], addButton=None, addCb=lambda:None, activeCb=lambda *_:None, editCb=lambda *_:None, **kwargs ):
-        self.addCb = addCb
-        self.activeCb = activeCb
-        self.editCb = editCb
-        ListView.__init__( self, parent, back, addButton, **kwargs )
-
-    def makeCell( self, label, **kwargs ):
-        return GroupControlWidget( self, label, self.back, self.addCb, self.activeCb, self.editCb )
-    
-    def appendCell( self ):
-        self.cells.append( self.initCell( self.addCb() ) )
 
 typesInclusive = [ "event", "cumulative" ]
 typesExclusive = typesInclusive + [ "stack", "bar", "pie" ]
@@ -56,10 +40,17 @@ class MainWindow( tk.Tk ):
         self.exclusive = True
         self.dateRange = None, None
         self.makeChart()
+        
         self.format = FormatMan()
         self.group = GroupMan( updateCb=self.redraw )
         self.ledger = LedgerMan( updateCb=self.redraw )
         self.loadData()
+
+        self.exclusiveVar = tk.IntVar()
+        self.exclusiveVar.set( 1 )
+        self.plotTypeVar = tk.StringVar()
+        self.plotTypeVar.set( typesExclusive[ 0 ] )
+        self.plotTypeVar.trace( 'w', self.setPlotType )
         self.build()
     
     def loadData( self ):
@@ -118,6 +109,15 @@ class MainWindow( tk.Tk ):
     
     def activateGroup( self, label, state ):
         self.group.setActive( label, state )
+    
+    def exclusiveCb( self ):
+        self.exclusive = bool( self.exclusiveVar.get() )
+        setMenuOptions(
+            self.plotTypeMenu,
+            self.plotTypeVar,
+            typesExclusive if self.exclusive else typesInclusive
+        )
+        self.redraw()
 
     def build( self ):
         self.grid_rowconfigure( 0, weight=1 )
@@ -129,29 +129,35 @@ class MainWindow( tk.Tk ):
         controlFrame.grid_columnconfigure( 0, weight=1 )
         controlFrame.grid_rowconfigure( 2, weight=1 )
 
-        importLedgerButton = ttk.Button( controlFrame, text="Import Ledger", command=importLedgerCb( self, self.ledger, self.format, 20 ) )
+        importLedgerButton = ttk.Button(
+            controlFrame, text="Import Ledger",
+            command=importLedgerCb( self, self.ledger, self.format, 25 )
+        )
         importLedgerButton.grid( row=0, column=0, sticky=tk.NSEW )
         viewLedgerButton = ttk.Button( controlFrame, text="Browse Ledger", command=self.viewLedger )
         viewLedgerButton.grid( row=1, column=0, sticky=tk.NSEW )
 
         groupScroll = Scrollable( controlFrame, vertical=True )
         groupScroll.grid( row=2, column=0, sticky=tk.NSEW )
-        groupList = GroupList( groupScroll, self.group.groups, "New Group", self.group.create, self.activateGroup, self.editGroup )
+        groupList = GroupList(
+            groupScroll,
+            self.group.groups,
+            "New Group",
+            self.group.create,
+            self.activateGroup,
+            self.editGroup
+        )
         groupList.pack()
-        
-        self.plotTypeVar = tk.StringVar()
-        self.plotTypeVar.trace( 'w', self.setPlotType )
-        self.plotTypeMenu = ttk.OptionMenu( controlFrame, self.plotTypeVar, typesExclusive[ 0 ], *typesExclusive )
+
+        self.plotTypeMenu = ttk.OptionMenu(
+            controlFrame,
+            self.plotTypeVar,
+            None,
+            *typesExclusive
+        )
         self.plotTypeMenu.grid( row=4, column=0, sticky=tk.NSEW )
 
-        exclusiveVar = tk.IntVar()
-        exclusiveVar.set( 1 )
-        def exclusiveCb():
-            self.exclusive = bool( exclusiveVar.get() )
-            setMenuOptions( self.plotTypeMenu, self.plotTypeVar, typesExclusive if self.exclusive else typesInclusive )
-            self.redraw()
-
-        exclusiveToggle = ttk.Checkbutton( controlFrame, variable=exclusiveVar, text="Exclusive", command=exclusiveCb )
+        exclusiveToggle = ttk.Checkbutton( controlFrame, variable=self.exclusiveVar, text="Exclusive", command=self.exclusiveCb )
         exclusiveToggle.grid( row=3, column=0, sticky=tk.NSEW )
 
 # make the window
@@ -161,8 +167,9 @@ top.tk.call( 'wm', 'iconphoto', top._w, tk.PhotoImage( file='logo.png' ) )
 top.mainloop()
 
 # save current settings
-if not os.path.exists( os.path.join( '.', 'userdata' ) ):
-    os.mkdir( os.path.join( '.', 'userdata' ) )
+userDataPath = os.path.join( '.', 'userdata' )
+if not os.path.exists( userDataPath ):
+    os.mkdir( userDataPath )
 top.format.save()
 top.ledger.save()
 top.group.save()
