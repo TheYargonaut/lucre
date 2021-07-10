@@ -18,7 +18,7 @@ class GroupControlWidget( ttk.Frame ):
 
         self.activateButton = None
         self.color = None
-        
+
         self.build()
 
     def build( self ):
@@ -49,4 +49,6 @@ class GroupControlWidget( ttk.Frame ):
         self.destroy()
 
     def edit( self ):
-        self.editCb( self.label, self.activateButton, self.color )
+        self.editCb( self.label )
+        self.activateButton.config( text=self.back[ self.label ].title )
+        self.color.config( fg=self.back[ self.label ].color )

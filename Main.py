@@ -102,8 +102,8 @@ class MainWindow( tk.Tk ):
         self.dateRangeW = DateRangeWidget( chartFrame, self.setDateRange )
         self.dateRangeW.grid( row=1, column=0, sticky=tk.W )
     
-    def editGroup( self, idx, activator, color ):
-        editGroupCb( self, self.group.groups[ idx ], self.ledger, 20, activator, color )()
+    def editGroup( self, idx ):
+        editGroupCb( self, self.group.groups[ idx ], self.ledger, 25 )()
         
     def viewLedger( self ):
         viewLedgerCb( self, self.group.groups, self.ledger.df )()

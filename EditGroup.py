@@ -5,21 +5,19 @@ from Scrollable import Scrollable
 from Table import DfTable
 from List import ListView
 from Group import Group
+
 # window for editing a group
 
 prevLens = [ 10, 25, 100 ]
 
 class EditGroupWindow( tk.Toplevel ):
-    def __init__( self, master, group, ledger, psize, titleWidget, colorWidget, *args, **kwargs ):
+    def __init__( self, master, group, ledger, psize, *args, **kwargs ):
         tk.Toplevel.__init__( self, master, *args, **kwargs )
         self.title( "edit group" )
-        self.lastMask = None
         self.groupBack = group
         self.group = Group( **dict( group ) )
         self.ledger = ledger
         self.psize = psize
-        self.titleWidget = titleWidget
-        self.colorWidget = colorWidget
         self.highlight = self.group.color # "white"
         self.ignored = "#E00E00E00" # gray
         self.table = None
@@ -27,13 +25,10 @@ class EditGroupWindow( tk.Toplevel ):
         self.matchListCb()
     
     def matchListCb( self, *args ):
-        'set the highlights when group lists change; modify ones that actually change'
+        'set the highlights when group lists change'
         mask = self.group.filter( self.ledger.df )
-        if self.lastMask is None:
-            self.lastMask = ~mask
-        for r, m, l in zip( range( self.table.shape[ 0 ] ), mask, self.lastMask ):
+        for r, m in zip( range( self.table.shape[ 0 ] ), mask ):
             self.table.configRowColor( r, self.highlight if m else self.ignored )
-        self.lastMask = mask
     
     def finalize( self ):
         self.groupBack.whitelist = [ r for r in self.group.whitelist if r ]
@@ -41,8 +36,6 @@ class EditGroupWindow( tk.Toplevel ):
         self.groupBack.negate = self.group.negate
         self.groupBack.title = self.group.title
         self.groupBack.color = self.group.color
-        self.titleWidget.config( text=self.group.title )
-        self.colorWidget.config( fg=self.group.color )
         self.ledger.updateCb( self.ledger.df )
         self.destroy()
         
@@ -130,8 +123,8 @@ class EditGroupWindow( tk.Toplevel ):
         self.scroll.grid( row=1, column=0, sticky=tk.NE + tk.S )
         self.resizePreview( self.psize )
 
-def editGroupCb( master, group, ledger, psize, titleWidget, colorWidget ):
-    def cb( master=master, group=group, ledger=ledger, psize=psize, titleWidget=titleWidget, colorWidge=colorWidget ):
-        window = EditGroupWindow( master, group, ledger, psize, titleWidget, colorWidget )
+def editGroupCb( master, group, ledger, psize ):
+    def cb( master=master, group=group, ledger=ledger, psize=psize ):
+        window = EditGroupWindow( master, group, ledger, psize )
         master.wait_window( window )
     return cb

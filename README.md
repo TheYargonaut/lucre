@@ -45,3 +45,4 @@ If you ever wondered where all your money was going and thought a graph would he
 - Undo/redo buffer
 - Ledger editing
 - Installer that doesn't require knowledge of python and git
+- Language package (w/ strings)
