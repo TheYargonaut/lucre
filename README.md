@@ -26,13 +26,17 @@ If you ever wondered where all your money was going and thought a graph would he
 - choose color for each group
 - date windowing
 - see partition on log (with chosen colors and other)
+- bar graphs
+
+## Misc TODO
+- separate chart widget (with draw from groups/partition)
 
 ## Potential Features
 
 - multiple panels (with separate date restrictions, for time period comparison)
-- bar graph (sync height across panels?)
+- sync bar-graph height across panels
 
-
+- stacked bar graphs
 - Fill stack, label totals (include reset button)
 - keep state on close, recover on open
 - reorder groups
