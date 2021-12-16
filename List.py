@@ -19,8 +19,9 @@ class ListView( ttk.Frame ):
     
     def appendCell( self ):
         self.back.append( '' )
-        self.cells.append( self.initCell( len( self.back ) - 1 ) )
-        self.cb( '' )
+        idx = len( self.back ) - 1
+        self.cells.append( self.initCell( idx ) )
+        self.cb( idx, '' )
     
     def initCell( self, label ):
         cell = self.makeCell( label )
