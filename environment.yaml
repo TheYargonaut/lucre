@@ -1,4 +1,4 @@
-name: base
+name: lucre
 channels:
   - anaconda
   - conda-forge
