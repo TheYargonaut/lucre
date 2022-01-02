@@ -1,9 +1,6 @@
 from Backer import Backer
 
 class PlotSettings( Backer ):
-    # static members
-    typesInclusive = [ "event", "cumulative" ]
-    typesExclusive = typesInclusive + [ "stack", "bar", "pie" ]
     choiceToFunc = dict(
         event="plotAmount",
         cumulative="plotCumulative",
@@ -12,13 +9,21 @@ class PlotSettings( Backer ):
         bar="plotBar"
     )
 
-    def __init__(self):
+    def __init__( self ):
         Backer.__init__( self, None )
         self.exclusive = True
-        self.plotType = list(self.choiceToFunc.values() )[ 0 ]
+        self.plotType = next( v for v in self.choiceToFunc.values() )
         self.dateRange = None, None
 
     def setPlotType( self, choice ):
         # TODO: decouple the display from the internal choice
         self.plotType = self.choiceToFunc[ choice ]
+        self.push()
+    
+    def setExclusive( self, exclusive ):
+        self.exclusive = bool( exclusive )
+        self.push()
+    
+    def setDateRange( self, low, high ):
+        self.dateRange = low, high
         self.push()
