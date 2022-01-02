@@ -1,12 +1,15 @@
+from ChartWidget import ChartWidget
 from DateRangeWidget import DateRangeWidget
-from GroupControlWidget import GroupList
 from EditGroupWindow import editGroupCb
-from ViewLedgerWindow import viewLedgerCb
-from ImportLedgerWindow import importLedgerCb
 from Format import FormatMan
 from Group import Partition, GroupMan
-from Ledger import LedgerMan
+from GroupControlWidget import GroupList
+from ImportLedgerWindow import importLedgerCb
+from Ledger import Ledger
+from PlotSettings import PlotSettings
 from Scrollable import Scrollable
+from ViewLedgerWindow import viewLedgerCb
+
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from tkinter import ttk
 import matplotlib.pyplot as plt
@@ -15,16 +18,6 @@ import pandas as pd
 import tkinter as tk
 
 pd.plotting.register_matplotlib_converters()
-
-typesInclusive = [ "event", "cumulative" ]
-typesExclusive = typesInclusive + [ "stack", "bar", "pie" ]
-choiceToFunc = dict(
-    event="plotAmount",
-    cumulative="plotCumulative",
-    stack="plotStack",
-    pie="plotPie",
-    bar="plotBar"
-)
 
 def setMenuOptions( widget, var, options ):
     if var.get() not in options:
@@ -36,20 +29,19 @@ def setMenuOptions( widget, var, options ):
 class MainWindow( tk.Tk ):
     def __init__( self ):
         tk.Tk.__init__( self )
-        self.plotType = "plotAmount"
-        self.exclusive = True
-        self.dateRange = None, None
-        self.makeChart()
+
+        self.plotSettings = PlotSettings()
         
         self.format = FormatMan()
         self.group = GroupMan( updateCb=self.redraw )
-        self.ledger = LedgerMan( updateCb=self.redraw )
+        self.ledger = Ledger( updateCb=self.redraw )
+        self.makeChart()
         self.loadData()
 
         self.exclusiveVar = tk.IntVar()
         self.exclusiveVar.set( 1 )
         self.plotTypeVar = tk.StringVar()
-        self.plotTypeVar.set( typesExclusive[ 0 ] )
+        self.plotTypeVar.set( PlotSettings.typesExclusive[ 0 ] )
         self.plotTypeVar.trace( 'w', self.setPlotType )
         self.build()
     
@@ -60,25 +52,25 @@ class MainWindow( tk.Tk ):
     
     def redraw( self, *args ):
         df = self.ledger.df
-        if self.dateRange[ 0 ]:
-            df = df.loc[ df[ 'date' ] >= self.dateRange[ 0 ] ]
-        if self.dateRange[ 1 ]:
-            df = df.loc[ df[ 'date' ] <= self.dateRange[ 1 ] ]
+        if self.plotSettings.dateRange[ 0 ]:
+            df = df.loc[ df[ 'date' ] >= self.plotSettings.dateRange[ 0 ] ]
+        if self.plotSettings.dateRange[ 1 ]:
+            df = df.loc[ df[ 'date' ] <= self.plotSettings.dateRange[ 1 ] ]
         active = self.group.active
-        self.fig.clf()
+        self.chartWidget.fig.clf()
         if not active:
             self.chartWidget.draw()
             return
-        self.ax = self.fig.add_subplot( 111 )
-        if self.exclusive:
+        self.ax = self.chartWidget.fig.add_subplot( 111 )
+        if self.plotSettings.exclusive:
             groups = [ self.group.groups[ a ] for a in active ]
             blacklist = sum( ( g.whitelist for k, g in self.group.groups.items() if k not in active ), [] )
             part = Partition( groups=groups, blacklist=blacklist, otherColor=self.group.newColor() )
-            getattr( part, self.plotType )( df, self.ax )
+            getattr( part, self.plotSettings.plotType )( df, self.ax )
         else:
             for a in active:
-                getattr( self.group.groups[ a ], self.plotType )( df, self.ax )
-        if self.plotType != 'plotPie':
+                getattr( self.group.groups[ a ], self.plotSettings.plotType )( df, self.ax )
+        if self.plotSettings.plotType != 'plotPie':
             self.ax.legend( handles=self.ax.lines )
         self.chartWidget.draw()
     
@@ -87,9 +79,10 @@ class MainWindow( tk.Tk ):
         chartFrame.grid( row=0, column=0, sticky=tk.NSEW )
         chartFrame.grid_rowconfigure( 0, weight=1 )
         chartFrame.grid_columnconfigure( 0, weight=1 )
-        self.fig = plt.Figure()
-        self.chartWidget = FigureCanvasTkAgg( self.fig, chartFrame )
-        self.chartWidget.get_tk_widget().grid( row=0, column=0, sticky=tk.NSEW )
+
+        self.chartWidget = ChartWidget( chartFrame, None, None, None, self.plotSettings ) #Todo: pass appropriate for working
+        self.chartWidget.grid( row=0, column=0, sticky=tk.NSEW )
+
         self.dateRangeW = DateRangeWidget( chartFrame, self.setDateRange )
         self.dateRangeW.grid( row=1, column=0, sticky=tk.W )
     
@@ -100,22 +93,22 @@ class MainWindow( tk.Tk ):
         viewLedgerCb( self, self.group.groups, self.ledger.df )()
 
     def setPlotType( self, *args ):
-        self.plotType = choiceToFunc[ self.plotTypeVar.get() ]
+        self.plotSettings.setPlotType(self.plotTypeVar.get())
         self.redraw()
     
     def setDateRange( self, l, h ):
-        self.dateRange = l, h
+        self.plotSettings.dateRange = l, h
         self.redraw()
     
     def activateGroup( self, label, state ):
         self.group.setActive( label, state )
     
     def exclusiveCb( self ):
-        self.exclusive = bool( self.exclusiveVar.get() )
+        self.plotSettings.exclusive = bool( self.exclusiveVar.get() )
         setMenuOptions(
             self.plotTypeMenu,
             self.plotTypeVar,
-            typesExclusive if self.exclusive else typesInclusive
+            PlotSettings.typesExclusive if self.plotSettings.exclusive else PlotSettings.typesInclusive
         )
         self.redraw()
 
@@ -153,7 +146,7 @@ class MainWindow( tk.Tk ):
             controlFrame,
             self.plotTypeVar,
             None,
-            *typesExclusive
+            *PlotSettings.typesExclusive
         )
         self.plotTypeMenu.grid( row=4, column=0, sticky=tk.NSEW )
 

@@ -1,4 +1,5 @@
 from Format import internalFmt
+from Backer import Backer
 
 import os
 import pandas as pd
@@ -31,13 +32,15 @@ def preprocess( df ):
 
 defaultFile = os.path.join( '.', 'userdata', 'ledger.csv' )
 
-class LedgerMan( object ):
+class Ledger( Backer ):
     def __init__( self, df=pd.DataFrame( columns=internalFmt ), updateCb=lambda:None ):
+        Backer.__init__(self, df)
         self.df = df
         self.updateCb = updateCb
     
     def add( self, df ):
         self.df = preprocess( self.df.append( preprocess( df ) ) )
+        self.push()
         self.updateCb( self.df )
     
     def load( self, filename=defaultFile, fmt=internalFmt ):
@@ -46,6 +49,7 @@ class LedgerMan( object ):
             df = pd.read_csv( filename, index_col=None, header=None, names=fmt )
             df = preprocess( df )
             self.df = preprocess( self.df.append( df ) )
+            self.push()
             self.updateCb( self.df )
             return True
         except FileNotFoundError:
