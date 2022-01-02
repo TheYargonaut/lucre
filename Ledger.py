@@ -33,16 +33,14 @@ def preprocess( df ):
 defaultFile = os.path.join( '.', 'userdata', 'ledger.csv' )
 
 class Ledger( Backer ):
-    def __init__( self, df=pd.DataFrame( columns=internalFmt ), updateCb=lambda:None ):
+    def __init__( self, df=pd.DataFrame( columns=internalFmt ) ):
         Backer.__init__(self, df)
         self.df = df
-        self.updateCb = updateCb
-    
+
     def add( self, df ):
         self.df = preprocess( self.df.append( preprocess( df ) ) )
         self.push()
-        self.updateCb( self.df )
-    
+
     def load( self, filename=defaultFile, fmt=internalFmt ):
         'load groups from file, add to existing groups. returns successful'
         try:
@@ -50,7 +48,6 @@ class Ledger( Backer ):
             df = preprocess( df )
             self.df = preprocess( self.df.append( df ) )
             self.push()
-            self.updateCb( self.df )
             return True
         except FileNotFoundError:
             return False

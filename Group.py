@@ -1,7 +1,9 @@
+from Backer import Backer
+from Format import internalFmt
+
 import os, yaml, pdb
 import pandas as pd
 from functools import reduce
-from Format import internalFmt
 import numpy as np
 
 # basic event grouping
@@ -159,13 +161,13 @@ class Partition( object ):
 defaultFile = os.path.join( '.', 'userdata', 'groups.yaml' )
 def randomColor():
     return '#%06x' % np.random.randint( 0xFFFFFF )
-class GroupMan( object ):
-    def __init__( self, groups=[], updateCb=lambda active:None ):
+class GroupMan( Backer ):
+    def __init__( self, groups=[] ):
         self.groups = { i:g for i, g in enumerate( groups ) }
-        self.updateCb = updateCb
+        Backer.__init__( self, self.groups )
         self.uids = len( self.groups )
         self.active = set() # keys pointing to active groups
-        self.newColorCache = None # return same new-color until actually added for stability
+        self.newColorCache = None
     
     def newColor( self ):
         colors = [ g.color.lower() for g in self.groups.values() if g.color ]
@@ -186,7 +188,7 @@ class GroupMan( object ):
             self.active.add( key )
         else:
             self.active.discard( key )
-        self.updateCb( self.active )
+        self.push()
     
     def load( self, filename=defaultFile ):
         'load groups from file, add to existing groups. returns successful'
@@ -203,7 +205,7 @@ class GroupMan( object ):
             #     if not g.color:
             #         g.color = self.newColor()
             self.groups.update( ingroup )
-            self.updateCb( self.active )
+            self.push()
         return True
 
     def save( self, filename=defaultFile ):

@@ -1,7 +1,7 @@
 from ChartWidget import ChartWidget
 from EditGroupWindow import editGroupCb
 from Format import FormatMan
-from Group import Partition, GroupMan
+from Group import GroupMan
 from GroupControlWidget import GroupList
 from ImportLedgerWindow import importLedgerCb
 from Ledger import Ledger
@@ -24,13 +24,10 @@ class MainWindow( tk.Tk ):
         tk.Tk.__init__( self )
 
         self.plotSettings = PlotSettings()
-        self.plotSettings.register( self.redraw )
 
         self.format = FormatMan()
-        self.group = GroupMan( updateCb=self.redraw )
-        self.ledger = Ledger( updateCb=self.redraw )
-
-        self.chartWidget = None # to remove
+        self.group = GroupMan()
+        self.ledger = Ledger()
         self.loadData()
 
         self.build()
@@ -41,37 +38,14 @@ class MainWindow( tk.Tk ):
         self.ledger.load()
 
     def redraw( self, *args ):
-        if not self.chartWidget:
-          return
-
-        df = self.ledger.df
-        if self.plotSettings.dateRange[ 0 ]:
-            df = df.loc[ df[ 'date' ] >= self.plotSettings.dateRange[ 0 ] ]
-        if self.plotSettings.dateRange[ 1 ]:
-            df = df.loc[ df[ 'date' ] <= self.plotSettings.dateRange[ 1 ] ]
-        active = self.group.active
-        self.chartWidget.fig.clf()
-        if not active:
+        if self.chartWidget:
             self.chartWidget.draw()
-            return
-        self.ax = self.chartWidget.fig.add_subplot( 111 )
-        if self.plotSettings.exclusive:
-            groups = [ self.group.groups[ a ] for a in active ]
-            blacklist = sum( ( g.whitelist for k, g in self.group.groups.items() if k not in active ), [] )
-            part = Partition( groups=groups, blacklist=blacklist, otherColor=self.group.newColor() )
-            getattr( part, self.plotSettings.plotType )( df, self.ax )
-        else:
-            for a in active:
-                getattr( self.group.groups[ a ], self.plotSettings.plotType )( df, self.ax )
-        if self.plotSettings.plotType != 'plotPie':
-            self.ax.legend( handles=self.ax.lines )
-        self.chartWidget.draw()
     
     def editGroup( self, idx ):
         editGroupCb( self, self.group.groups[ idx ], self.ledger, 25 )()
         
     def viewLedger( self ):
-        viewLedgerCb( self, self.group.groups, self.ledger.df )()
+        viewLedgerCb( self, self.group, self.ledger )()
     
     def activateGroup( self, label, state ):
         self.group.setActive( label, state )
@@ -80,7 +54,7 @@ class MainWindow( tk.Tk ):
         self.grid_rowconfigure( 0, weight=1 )
         self.grid_columnconfigure( 0, weight=1 )
 
-        self.chartWidget = ChartWidget( self, None, None, None, self.plotSettings ) #TODO: pass appropriate for working
+        self.chartWidget = ChartWidget( self, self.group, self.ledger, self.plotSettings )
         self.chartWidget.grid( row=0, column=0, sticky=tk.NSEW )
 
         controlFrame = ttk.Frame( self )

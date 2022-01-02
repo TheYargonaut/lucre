@@ -7,15 +7,15 @@ from Table import DfTable
 lengthList = [ 10, 25, 100, 250, 1000 ]
 
 class ViewLedgerWidget( ttk.Frame ):
-    def __init__( self, master, ledger, lenCb=lambda:None, length=lengthList[ 0 ], *args, **kwargs ):
+    def __init__( self, master, ledger, lenCb=lambda x:None, length=lengthList[ 0 ], *args, **kwargs ):
         ttk.Frame.__init__( self, master, *args, **kwargs )
         self.ledger = ledger
         self.lenCb = lenCb
         self.length = length
 
         self.lengthList = [
-            str( l ) for l in lengthList if l < self.ledger.shape[ 0 ]
-        ] + [ self.ledger.shape[ 0 ] ]
+            str( l ) for l in lengthList if l < self.ledger.df.shape[ 0 ]
+        ] + [ self.ledger.df.shape[ 0 ] ]
 
         self.scroll = None
         self.table = None
@@ -29,7 +29,7 @@ class ViewLedgerWidget( ttk.Frame ):
         if self.table is not None:
             self.table.destroy()
             self.table = None
-        self.table = DfTable( self.scroll, self.ledger.head( self.length ) )
+        self.table = DfTable( self.scroll, self.ledger.df.head( self.length ) )
         self.table.pack( side=tk.TOP, fill=tk.BOTH, expand=True )
         self.lenCb( self )
     
