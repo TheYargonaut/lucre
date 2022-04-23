@@ -6,9 +6,18 @@ import matplotlib.pyplot as plt
 from tkinter import ttk
 import tkinter as tk
 
+def plotAmount( partition, active ):
+    for i, ( title, color, gdf ) in partition.items():
+        if df.empty or i not in active:
+            continue
+        gdf.loc[ :, title ] = gdf[ 'amount' ]
+        gdf.plot( x='date', y=title, ax=self.ax, marker='o', color=color, linestyle='' )
+    self.ax.legend( handles=self.ax.lines )
+    self.chart.draw()
+
 class ChartWidget( ttk.Frame, Viewer ):
     def __init__( self, parent, group, ledger, setting, *args, **kwargs ):
-        Viewer.__init__( self, backer=[ group, ledger, setting ] ) # TODO: fill out
+        Viewer.__init__( self, backer=[ group, ledger, setting ] )
         ttk.Frame.__init__( self, parent, *args, **kwargs )
 
         self.group = group
@@ -30,13 +39,27 @@ class ChartWidget( ttk.Frame, Viewer ):
         if not active:
             self.chart.draw()
             return
-
+        
         df = self.ledger.df
+        
+        # data filter
         if self.setting.dateRange[ 0 ]:
             df = df.loc[ df[ 'date' ] >= self.setting.dateRange[ 0 ] ]
         if self.setting.dateRange[ 1 ]:
             df = df.loc[ df[ 'date' ] < self.setting.dateRange[ 1 ] ]
         self.ax = self.fig.add_subplot( 111 )
+        
+        if self.setting.plotType == 'plotAmount':
+          partition = self.group.partitionData( self.ledger.df, self.setting.exclusive )
+          for i, ( title, color, gdf ) in partition.items():
+              if df.empty or i not in active:
+                  continue
+              gdf.loc[ :, title ] = gdf[ 'amount' ]
+              gdf.plot( x='date', y=title, ax=self.ax, marker='o', color=color, linestyle='' )
+          self.ax.legend( handles=self.ax.lines )
+          self.chart.draw()
+          return 
+
         if self.setting.exclusive:
             groups = [ self.group.groups[ a ] for a in active ]
             blacklist = sum( ( g.whitelist for k, g in self.group.groups.items() if k not in active ), [] )

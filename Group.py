@@ -5,14 +5,15 @@ import os, yaml, pdb
 import pandas as pd
 from functools import reduce
 import numpy as np
+from time import time
 
 # basic event grouping
 
 def matchAny( regexList, df, column='memo' ):
-    return reduce( lambda x,y: x | y,
-                   ( df[ column ].str.contains( r ) 
-                     for r in regexList if r ),
-                   False )
+    masterRegex = '|'.join( '(?:{})'.format( r ) for r in regexList if r )
+    if masterRegex:
+        return df[ column ].str.contains( masterRegex )
+    return df[ column ].map( lambda _ : False )
 
 class Group( object ):
     def __init__( self, title="", whitelist=[], blacklist=[], negate=False, color=None ):
@@ -23,6 +24,11 @@ class Group( object ):
         self.negate = negate
         self.color = color
     
+    def splitData( self, df ):
+        '''returns tuple of two data frames: (matches, non-matches)'''
+        f = self.filter( df )
+        return df[ f ], df[ ~f ]
+    
     def applyWhitelist( self, df ):
         return matchAny( self.whitelist, df )
     
@@ -32,15 +38,15 @@ class Group( object ):
     def filter( self, df ):
         '''returns filtered pandas dataframe
         first applies whitelist, then blacklist'''
-        f = df[ 'memo' ].str.contains( '.*' )
-        if self.whitelist:
-            f &= self.applyWhitelist( df )
+        if not self.whitelist:
+          return df[ 'memo' ].map( lambda _ : False )
+        f = self.applyWhitelist( df )
         if self.blacklist:
             f &= self.applyBlacklist( df )
         return f
     
     def plotAmount( self, df, ax ):
-        df = df[ self.filter( df ) ].copy()
+        df = self.splitData(df)[0].copy()
         if self.negate:
             df[ self.title ] = -df[ 'amount' ]
         else:
@@ -83,9 +89,9 @@ class Partition( object ):
     
     def filter( self, df, edges=True ):
         'split into g+1 groups and return as dictionary'
-        df = df.copy()
         if self.blacklist:
             df = df[ ~matchAny( self.blacklist, df ) ]
+        df = df.copy()
         early = pd.DataFrame( dict( date=df[ 'date' ].min(),
                                     amount=0,
                                     memo='' ), index=[ 0 ] )
@@ -94,14 +100,13 @@ class Partition( object ):
                                    memo='' ), index=[ 0 ] )
         r = {}
         for g in self.groups:
-            f = g.filter( df )
+            gdf, df = g.splitData( df )
             if edges:
-                r[ g.title ] = pd.concat( [ early, df[ f ], late ] ).reset_index( drop=True )
+                r[ g.title ] = pd.concat( [ early, gdf, late ] ).reset_index( drop=True )
             else:
-                r[ g.title ] = df[ f ].copy()
+                r[ g.title ] = gdf.copy()
             if g.negate:
                 r[ g.title ].loc[ :, 'amount' ] = -r[ g.title ][ 'amount' ]
-            df = df[ ~f ]
         if edges:
             r[ 'Other' ] = pd.concat( [ early, df, late ] ).reset_index( drop=True )
         else:
@@ -168,6 +173,16 @@ class GroupMan( Backer ):
         self.uids = len( self.groups )
         self.active = set() # keys pointing to active groups
         self.newColorCache = None
+    
+    def partitionData( self, df, exclusive ):
+        if not exclusive:
+            return { i : ( g.title, g.color, g.splitData( df )[ 0 ].copy() ) for i, g in self.groups.items() }
+        r = {}
+        for i, g in self.groups.items():
+            gdf, df = g.splitData( df )
+            r[ i ] = g.title, g.color, gdf.copy()
+        r[ 'Other' ] = df.copy()
+        return r
     
     def newColor( self ):
         colors = [ g.color.lower() for g in self.groups.values() if g.color ]

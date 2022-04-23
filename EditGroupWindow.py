@@ -18,7 +18,7 @@ class EditGroupWindow( tk.Toplevel ):
         self.group = Group( **dict( group ) )
         self.ledger = ledger
         self.psize = psize
-        self.highlight = self.group.color # "white"
+        self.highlight = self.group.color
         self.ignored = "#E00E00E00" # gray
         self.view = None
         self.build()
@@ -36,7 +36,7 @@ class EditGroupWindow( tk.Toplevel ):
         self.groupBack.negate = self.group.negate
         self.groupBack.title = self.group.title
         self.groupBack.color = self.group.color
-        self.ledger.updateCb( self.ledger.df )
+        self.ledger.push() # TODO: push on groupman instead
         self.destroy()
         
     def whiteListCb( self, idx, txt ):
@@ -109,7 +109,7 @@ class EditGroupWindow( tk.Toplevel ):
         style = ttk.OptionMenu( nameFrame, tk.StringVar( nameFrame ), ( "expense" if self.group.negate else "income" ), "income", "expense", command=self.expenseCb )
         style.pack( side=tk.RIGHT, fill=tk.NONE, expand=False )
 
-        self.view = ViewLedgerWidget( mainFrame, self.ledger.df, lenCb=self.matchListCb )
+        self.view = ViewLedgerWidget( mainFrame, self.ledger, lenCb=self.matchListCb )
         self.view.grid( row=1, column=0, sticky=tk.NE + tk.S )
 
 def editGroupCb( master, group, ledger, psize ):

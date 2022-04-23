@@ -29,7 +29,9 @@ If you ever wondered where all your money was going and thought a graph would he
 - bar graphs
 
 ## Misc TODO
-- separate chart widget (with draw from groups/partition)
+- separate plots out from grouping
+- separate consolidation per-group df
+- consolidate by month and similar transformations
 
 ## Potential Features
 
